@@ -13,21 +13,25 @@ namespace EncRotator
     {
         public ConnectionGroup connectionGroup;
         private List<ConnectionSettings> _connections;
-        private List<int> idxList;
+        private List<int> idxList = new List<int>();
         public FConnectionGroup(ConnectionGroup cg, List<ConnectionSettings> connections)
         {
             InitializeComponent();
-            connectionGroup = cg;
+            connectionGroup = cg != null ? (ConnectionGroup)cg.Clone() : new ConnectionGroup();
             _connections = connections;
-            fillList();
-            if ( lbSet.Items.Count > 0 )
-                lbSet.SelectedIndex = 0;
-            tbName.Text = cg.name;
+            if (cg != null)
+            {
+                tbName.Text = cg.name;
+                fillList();
+                if (lbSet.Items.Count > 0)
+                    lbSet.SelectedIndex = 0;
+            }
         }
 
         private void fillList()
         {
             lbSet.Items.Clear();
+            idxList.Clear();
             for (int c = 0; c < _connections.Count; c++)
                 if (connectionGroup.contains(c))
                 {
@@ -56,10 +60,14 @@ namespace EncRotator
                 {
                     if (sel != -1)
                         connectionGroup.removeConnection(connectionId);
-                    else
-                        connectionId = _connections.IndexOf((ConnectionSettings)fCGI.cbConnection.SelectedItem);
+                    connectionId = _connections.IndexOf((ConnectionSettings)fCGI.cbConnection.SelectedItem);
                     fCGI.tbMhz.Text.Split(';').ToList().ForEach(
                         x => connectionGroup.items.Add(new ConnectionGroupEntry { connectionId = connectionId, esMhz = Convert.ToInt32(x) } ) );
+                    if ( sel == -1 )
+                    {
+                        lbSet.Items.Add(_connections[connectionId].name + " - " + connectionGroup.mhzStr(connectionId));
+                        idxList.Add(connectionId);
+                    }
                     return true;
                 }
                 else
@@ -69,7 +77,7 @@ namespace EncRotator
         private void bDelete_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("Вы действительно хотите удалить элемент группы " + lbSet.Items[lbSet.SelectedIndex] + "?",
-                "Удаление элемента группы", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                "Удаление элемента группы соединений", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 int sel = lbSet.SelectedIndex;
                 int connectionId = idxList[sel];
@@ -99,7 +107,7 @@ namespace EncRotator
 
         private void bNew_Click(object sender, EventArgs e)
         {
-            ConnectionGroupEntry cgi = new ConnectionGroupEntry();
+            editConnectionGroupEntry(-1);
         }
     }
 }

@@ -18,6 +18,8 @@ namespace EncRotator
                 if (!connectionGroup.contains(c) || c == connectionId)
                     cbConnection.Items.Add(connections[c]);
             tbMhz.Text = connectionGroup.mhzStr(connectionId);
+            if (connectionId != -1)
+                cbConnection.SelectedItem = connections[connectionId];
         }
     }
 }

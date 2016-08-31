@@ -15,6 +15,8 @@ using EncRotator.Properties;
 using System.Threading.Tasks;
 using AutoUpdaterDotNET;
 using System.Globalization;
+using ExpertSync;
+using System.Net;
 
 namespace EncRotator
 {
@@ -80,6 +82,7 @@ namespace EncRotator
         int prevHeight;
         double mapRatio = 0;
         ConnectionSettings currentConnection;
+        ConnectionGroup currentConnectionGroup;
         int noMoveTime = 0;
         const int adcDataLength = 10;
         int[] adcData = new int[adcDataLength];
@@ -97,6 +100,8 @@ namespace EncRotator
         int connectionFromArgs = -1;
         int limitDirection = 0;
         string dbgResult = "";
+        IPEndPoint esEndPoint;
+        ExpertSyncConnector esConnector;
 
         public int getCurrentAngle() {
             return currentAngle;
@@ -109,6 +114,7 @@ namespace EncRotator
             {
                 loadConfig();
                 updateConnectionsMenu();
+                updateConnectionGroupsMenu();
                 if (args.Count() > 0)
                 {
                     connectionFromArgs = formState.connections.FindIndex(item => item.name.Equals(args[0]));
@@ -144,6 +150,22 @@ namespace EncRotator
             }
             for (int co = 0; co < formState.connections.Count; co++)
                 createConnectionMenuItem(co);
+        }
+
+        private void updateConnectionGroupsMenu()
+        {
+            foreach (ConnectionGroup cg in formState.connectionGroups)
+            {
+                int idx = 0;
+                ToolStripMenuItem miCG = new ToolStripMenuItem();
+                miCG.Text = cg.name;
+                miCG.Click += delegate (object sender, EventArgs e)
+                {
+                    connectGroup(cg);
+                };
+                miConnections.DropDownItems.Insert(idx++, miCG);
+            }
+
         }
 
         private void formSPfromConnection(int ci)
@@ -248,6 +270,17 @@ namespace EncRotator
 
         }
 
+        private void connectGroup(ConnectionGroup cg)
+        {
+            if (cg.items.Count == 0)
+                showMessage("Выбранная группа " + cg.name + " не содержит подключений.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            else
+            {
+                currentConnectionGroup = cg;
+                loadConnection(cg.items[0].connectionId);
+            }
+        }
+
         private void setGear(int val)
         {
             if (curGear != val)
@@ -330,6 +363,8 @@ namespace EncRotator
         private void doDisconnect() {
             if (socket != null)
             {
+                if ( engineStatus != 0)
+                    engine(0);
                 if (currentConnection.deviceType == 0)
                     toggleLine(currentTemplate.ledLine, "0");
                 bgWorker.CancelAsync();
@@ -348,6 +383,7 @@ namespace EncRotator
                         miConnections.DropDownItems.AddRange(connectionsDropdown);
                     miSetNorth.Visible = false;
                     miCalibrate.Visible = false;
+                    miConnectionGroups.Visible = true;
                     miIngnoreEngineOffMovement.Visible = false;
                     timer.Enabled = false;
                     pMap.Invalidate();
@@ -580,6 +616,7 @@ namespace EncRotator
                 }
                 catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine("Error loading config: " + ex.ToString());
                 }
             }
         }
@@ -607,6 +644,8 @@ namespace EncRotator
                         connectionsDropdown = new ToolStripMenuItem[miConnections.DropDownItems.Count];
                         miConnections.DropDownItems.CopyTo(connectionsDropdown,0);
                         miConnections.DropDownItems.Clear();
+
+                        miConnectionGroups.Visible = false;
                         //miConnectionParams.Enabled = false;
 
                         miIngnoreEngineOffMovement.Visible = true;
@@ -689,6 +728,8 @@ namespace EncRotator
                         }
 
                         Text = currentConnection.name;
+                        if (currentConnectionGroup != null)
+                            Text += " (" + currentConnectionGroup.name + ")";
                         Icon = (Icon) Resources.ResourceManager.GetObject(CommonInf.icons[currentConnection.icon]);
                     }
                     else
@@ -1251,6 +1292,7 @@ namespace EncRotator
             {
                 while (socketBusy) continue;
                 doDisconnect();
+                currentConnectionGroup = null;
             }
 
         }
@@ -1465,6 +1507,66 @@ namespace EncRotator
             currentConnection.ignoreEngineOffMovement = miIngnoreEngineOffMovement.Checked;
             writeConfig();
         }
+
+        private void miConnectionGroupsList_Click(object sender, EventArgs e)
+        {
+            using (FConnectionGroupsList f = new FConnectionGroupsList(formState))
+                f.ShowDialog( this);
+        }
+
+        private void miExpertSync_Click(object sender, EventArgs e)
+        {
+            if (miExpertSync.Checked)
+            {
+                FESConnection fes;
+                if (esEndPoint != null)
+                    fes = new FESConnection(esEndPoint.Address.ToString(), esEndPoint.Port);
+                else
+                    fes = new FESConnection();
+                fes.ShowDialog();
+                if (fes.DialogResult == DialogResult.OK)
+                {
+                    esConnector = ExpertSyncConnector.create(fes.host, fes.port);
+                    esEndPoint = new IPEndPoint(IPAddress.Parse(fes.host), fes.port);
+                    esConnector.disconnected += esDisconnected;
+                    esConnector.onMessage += esMessage;
+                    writeConfig();
+                    miExpertSync.Checked = esConnector.connect();
+                }
+            }
+            else
+            {
+                esConnector.disconnect();
+                miExpertSync.Checked = false;
+            }
+
+        }
+
+        private void esDisconnected(object sender, ExpertSync.DisconnectEventArgs e)
+        {
+            if (!e.requested)
+                MessageBox.Show("Соединение с ExpertSync потеряно!");
+            miExpertSync.Checked = false;
+        }
+
+        private void esMessage(object sender, MessageEventArgs e)
+        {
+            int mhz = ((int)e.vfoa) / 1000000;
+            if (currentConnectionGroup != null && currentConnectionGroup.items.Exists( x => x.esMhz == mhz))
+                this.Invoke((MethodInvoker)delegate {
+                    int dst = currentConnectionGroup.items.First(x => x.esMhz == mhz).connectionId;
+                    if ( formState.connections[dst] != currentConnection )
+                    {
+                        if (socket != null)
+                        {
+                            while (socketBusy) continue;
+                            doDisconnect();
+                        }
+                        loadConnection(dst);
+                    }
+                });
+        }
+
     }
 
     class DeviceTemplate : ICloneable

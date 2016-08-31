@@ -90,6 +90,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExpertSync.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ExpertSync.designer.cs">
+      <DependentUpon>ExpertSync.cs</DependentUpon>
+    </Compile>
     <Compile Include="FConnectionGroupItem.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -160,6 +166,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="ExpertSync.resx">
+      <DependentUpon>ExpertSync.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FConnectionGroupItem.resx">
       <DependentUpon>FConnectionGroupItem.cs</DependentUpon>
     </EmbeddedResource>

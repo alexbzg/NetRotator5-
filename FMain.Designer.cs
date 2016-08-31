@@ -52,8 +52,11 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.bStop = new System.Windows.Forms.ToolStripButton();
             this.ddSettings = new System.Windows.Forms.ToolStripDropDownButton();
+            this.miConnectionGroups = new System.Windows.Forms.ToolStripMenuItem();
+            this.miConnectionGroupsList = new System.Windows.Forms.ToolStripMenuItem();
             this.miRelays = new System.Windows.Forms.ToolStripMenuItem();
             this.miIngnoreEngineOffMovement = new System.Windows.Forms.ToolStripMenuItem();
+            this.miExpertSync = new System.Windows.Forms.ToolStripMenuItem();
             this.miAbout = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.slCalibration = new System.Windows.Forms.ToolStripLabel();
@@ -67,7 +70,7 @@
             this.miNewConnection,
             this.miEditConnections});
             this.miConnections.Name = "miConnections";
-            this.miConnections.Size = new System.Drawing.Size(210, 22);
+            this.miConnections.Size = new System.Drawing.Size(221, 22);
             this.miConnections.Text = "Соединения";
             this.miConnections.Click += new System.EventHandler(this.miConnections_Click);
             // 
@@ -91,7 +94,7 @@
             this.miMapAdd,
             this.miMapRemove});
             this.miMaps.Name = "miMaps";
-            this.miMaps.Size = new System.Drawing.Size(210, 22);
+            this.miMaps.Size = new System.Drawing.Size(221, 22);
             this.miMaps.Text = "Карты";
             // 
             // miMapAdd
@@ -111,7 +114,7 @@
             // miSetNorth
             // 
             this.miSetNorth.Name = "miSetNorth";
-            this.miSetNorth.Size = new System.Drawing.Size(210, 22);
+            this.miSetNorth.Size = new System.Drawing.Size(221, 22);
             this.miSetNorth.Text = "Настройки антенны";
             this.miSetNorth.Visible = false;
             this.miSetNorth.Click += new System.EventHandler(this.miSetNorth_Click);
@@ -119,7 +122,7 @@
             // miCalibrate
             // 
             this.miCalibrate.Name = "miCalibrate";
-            this.miCalibrate.Size = new System.Drawing.Size(210, 22);
+            this.miCalibrate.Size = new System.Drawing.Size(221, 22);
             this.miCalibrate.Text = "Калибровать";
             this.miCalibrate.Visible = false;
             this.miCalibrate.Click += new System.EventHandler(this.miCalibrate_Click);
@@ -127,7 +130,7 @@
             // miModuleSettings
             // 
             this.miModuleSettings.Name = "miModuleSettings";
-            this.miModuleSettings.Size = new System.Drawing.Size(210, 22);
+            this.miModuleSettings.Size = new System.Drawing.Size(221, 22);
             this.miModuleSettings.Text = "Настройки модуля";
             this.miModuleSettings.Click += new System.EventHandler(this.miModuleSettings_Click);
             // 
@@ -248,12 +251,14 @@
             this.ddSettings.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.ddSettings.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.miConnections,
+            this.miConnectionGroups,
             this.miMaps,
             this.miSetNorth,
             this.miCalibrate,
             this.miRelays,
             this.miModuleSettings,
             this.miIngnoreEngineOffMovement,
+            this.miExpertSync,
             this.miAbout});
             this.ddSettings.ForeColor = System.Drawing.Color.Transparent;
             this.ddSettings.Image = ((System.Drawing.Image)(resources.GetObject("ddSettings.Image")));
@@ -262,11 +267,26 @@
             this.ddSettings.Size = new System.Drawing.Size(29, 23);
             this.ddSettings.Text = "Настройки";
             // 
+            // miConnectionGroups
+            // 
+            this.miConnectionGroups.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.miConnectionGroupsList});
+            this.miConnectionGroups.Name = "miConnectionGroups";
+            this.miConnectionGroups.Size = new System.Drawing.Size(221, 22);
+            this.miConnectionGroups.Text = "Группы соединений";
+            // 
+            // miConnectionGroupsList
+            // 
+            this.miConnectionGroupsList.Name = "miConnectionGroupsList";
+            this.miConnectionGroupsList.Size = new System.Drawing.Size(196, 22);
+            this.miConnectionGroupsList.Text = "Редактировать список";
+            this.miConnectionGroupsList.Click += new System.EventHandler(this.miConnectionGroupsList_Click);
+            // 
             // miRelays
             // 
             this.miRelays.CheckOnClick = true;
             this.miRelays.Name = "miRelays";
-            this.miRelays.Size = new System.Drawing.Size(210, 22);
+            this.miRelays.Size = new System.Drawing.Size(221, 22);
             this.miRelays.Text = "Управление реле";
             this.miRelays.Visible = false;
             this.miRelays.CheckStateChanged += new System.EventHandler(this.miRelays_CheckStateChanged);
@@ -275,15 +295,23 @@
             // 
             this.miIngnoreEngineOffMovement.CheckOnClick = true;
             this.miIngnoreEngineOffMovement.Name = "miIngnoreEngineOffMovement";
-            this.miIngnoreEngineOffMovement.Size = new System.Drawing.Size(210, 22);
+            this.miIngnoreEngineOffMovement.Size = new System.Drawing.Size(221, 22);
             this.miIngnoreEngineOffMovement.Text = "Игнорировать движение";
             this.miIngnoreEngineOffMovement.Visible = false;
             this.miIngnoreEngineOffMovement.CheckStateChanged += new System.EventHandler(this.miIngnoreEngineOffMovement_CheckStateChanged);
             // 
+            // miExpertSync
+            // 
+            this.miExpertSync.CheckOnClick = true;
+            this.miExpertSync.Name = "miExpertSync";
+            this.miExpertSync.Size = new System.Drawing.Size(221, 22);
+            this.miExpertSync.Text = "Подключение к ExpertSync";
+            this.miExpertSync.Click += new System.EventHandler(this.miExpertSync_Click);
+            // 
             // miAbout
             // 
             this.miAbout.Name = "miAbout";
-            this.miAbout.Size = new System.Drawing.Size(210, 22);
+            this.miAbout.Size = new System.Drawing.Size(221, 22);
             this.miAbout.Text = "О программе";
             this.miAbout.Click += new System.EventHandler(this.miAbout_Click);
             // 
@@ -353,6 +381,9 @@
         private System.Windows.Forms.ToolStripMenuItem miRelays;
         private System.Windows.Forms.ToolStripMenuItem miAbout;
         private System.Windows.Forms.ToolStripMenuItem miIngnoreEngineOffMovement;
+        private System.Windows.Forms.ToolStripMenuItem miConnectionGroups;
+        private System.Windows.Forms.ToolStripMenuItem miConnectionGroupsList;
+        private System.Windows.Forms.ToolStripMenuItem miExpertSync;
     }
 }
 

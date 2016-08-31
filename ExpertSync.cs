@@ -1,19 +1,46 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
-using System.IO;
-using System.Xml.Linq;
-using System.Xml.XPath;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace ExpertSync
 {
+    public partial class FESConnection : Form
+    {
+        public string host
+        {
+            get
+            {
+                return tbAddress.Text;
+            }
+        }
+
+        public int port
+        {
+            get
+            {
+                return Convert.ToInt32(tbPort.Text);
+            }
+        }
+
+        public FESConnection()
+        {
+            InitializeComponent();
+        }
+
+        public FESConnection( string host, int port)
+        {
+            InitializeComponent();
+            tbAddress.Text = host;
+            tbPort.Text = port.ToString();
+        }
+
+    
+    }
+
     public class StateObject
     {
         // Size of receive buffer.
@@ -52,17 +79,17 @@ namespace ExpertSync
             }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack=1)]
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         struct Message
         {
-	        public byte sid;          //!< software ID
+            public byte sid;          //!< software ID
             public byte type;         //!< тип пакета
             public byte receiver;     //!< номер программного приёмника
             public double vfoa;                //!< частота приёмника A
             public double vfob;                //!< частота приёмника B
             public byte modulation;   //!< индекс модуляции eSyncModulation
         }
-       
+
         // ManualResetEvent instances signal completion.
         private ManualResetEvent connectDone =
             new ManualResetEvent(false);
@@ -85,8 +112,8 @@ namespace ExpertSync
             }
         }
 
-        
-        public static ExpertSyncConnector create( string host, int port )
+
+        public static ExpertSyncConnector create(string host, int port)
         {
             IPAddress hostIP;
             if (IPAddress.TryParse(host, out hostIP))
@@ -223,7 +250,9 @@ namespace ExpertSync
 
                         receiveDone.Set();
                         receive();
-                    } else {
+                    }
+                    else
+                    {
                         _disconnect(false);
                     }
                 }
@@ -251,7 +280,7 @@ namespace ExpertSync
 
         private void replyTimeout()
         {
-            System.Diagnostics.Debug.WriteLine( "Reply timeout" );
+            System.Diagnostics.Debug.WriteLine("Reply timeout");
             _disconnect(false);
         }
 
@@ -281,7 +310,7 @@ namespace ExpertSync
 
                 // Signal that all bytes have been sent.
                 sendDone.Set();
-                
+
             }
             catch (Exception e)
             {
@@ -291,6 +320,6 @@ namespace ExpertSync
 
     }
 
-  
+
 
 }
