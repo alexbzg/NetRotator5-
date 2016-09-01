@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EncRotator", "EncRotator.csproj", "{E3B7AA31-F4BB-434C-8079-1B65D08AF0D7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetRotator", "NetRotator.csproj", "{E3B7AA31-F4BB-434C-8079-1B65D08AF0D7}"
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "..\Setup\Setup.vdproj", "{FF07923D-681B-4B9B-9283-C918312A36D3}"
 EndProject

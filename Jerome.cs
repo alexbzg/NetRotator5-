@@ -356,25 +356,9 @@ namespace Jerome
         public string name;
         public string host;
         public int port = 2424;
+        public int usartPort = 2525;
         public string password = "Jerome";
         public int httpPort = 80;
-
-        public bool edit()
-        {
-            FConnectionParams fcp = new FConnectionParams(this);
-            if (fcp.ShowDialog() == DialogResult.OK)
-            {
-                name = fcp.data.name;
-                host = fcp.data.host;
-                port = fcp.data.port;
-                httpPort = fcp.data.httpPort;
-                password = fcp.data.password;
-                return true;
-            }
-            else
-                return false;
-        }
-
 
         public JeromeControllerState getState()
         {

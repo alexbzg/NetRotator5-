@@ -114,6 +114,7 @@
     <Compile Include="FConnectionGroup.Designer.cs">
       <DependentUpon>FConnectionGroup.cs</DependentUpon>
     </Compile>
+    <Compile Include="Jerome.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="UpdatesChecker.cs" />
     <Compile Include="FConnectionsList.cs">
