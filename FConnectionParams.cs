@@ -27,22 +27,18 @@ namespace EncRotator
             InitializeComponent();
 
             tbName.Text = cSettings.name;
-            tbHost.Text = cSettings.host;
-            tbPort.Text = cSettings.port;
-            tbPassword.Text = cSettings.password;
-            nudSlowInt.Value = cSettings.slowInt;
+            tbHost.Text = cSettings.jeromeParams.host;
+            tbPort.Text = cSettings.jeromeParams.port.ToString();
+            tbPassword.Text = cSettings.jeromeParams.password;
             cbDeviceType.SelectedIndex = cSettings.deviceType;
-            chbSoft.Checked = cSettings.soft;
 
 
             _data.name = cSettings.name;
-            _data.host = cSettings.host;
-            _data.port = cSettings.port;
-            _data.password = cSettings.password;
-            _data.usartPort = cSettings.usartPort;
-            _data.slowInt = cSettings.slowInt;
+            _data.host = cSettings.jeromeParams.host;
+            _data.port = cSettings.jeromeParams.port.ToString();
+            _data.password = cSettings.jeromeParams.password;
+            _data.usartPort = cSettings.jeromeParams.usartPort.ToString();
             _data.deviceType = cSettings.deviceType;
-            _data.soft = cSettings.soft;
             _data.icon = cSettings.icon;
 
             displayIcon();
@@ -112,7 +108,6 @@ namespace EncRotator
 
         private void cbDeviceType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            chbSoft.Visible = cbDeviceType.SelectedIndex == 0;
             if (!chbSoft.Visible)
                 chbSoft.Checked = false;
         }

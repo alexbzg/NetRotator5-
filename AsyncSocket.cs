@@ -1,47 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using AsyncConnectionNS;
+using System.IO;
+using System.Xml.Linq;
+using System.Xml.XPath;
+using System.Diagnostics;
 
-namespace ExpertSync
+namespace AsyncConnectionNS
 {
-    public partial class FESConnection : Form
-    {
-        public string host
-        {
-            get
-            {
-                return tbAddress.Text;
-            }
-        }
-
-        public int port
-        {
-            get
-            {
-                return Convert.ToInt32(tbPort.Text);
-            }
-        }
-
-        public FESConnection()
-        {
-            InitializeComponent();
-        }
-
-        public FESConnection( string host, int port)
-        {
-            InitializeComponent();
-            tbAddress.Text = host;
-            tbPort.Text = port.ToString();
-        }
-
-    
-    }
-
     public class StateObject
     {
         // Size of receive buffer.
@@ -49,20 +21,29 @@ namespace ExpertSync
         // Receive buffer.
         public byte[] buffer = new byte[BufferSize];
         // Received data string.
+        public StringBuilder sb = new StringBuilder();
+        //received data callback
         public Func<string> reCb;
     }
 
-    public class MessageEventArgs : EventArgs
+    public class DisconnectEventArgs : EventArgs
     {
-        public byte modulation;
-        public double vfoa;
-        public double vfob;
+        public bool requested;
     }
 
-    public class ExpertSyncConnector
+    public class LineReceivedEventArgs : EventArgs
     {
-        private static int timeout = 1000;
+        public string line;
+    }
 
+    public class BytesReceivedEventArgs : EventArgs
+    {
+        public byte[] bytes;
+        public int count;
+    }
+
+    public class AsyncConnection
+    {
         class CmdEntry
         {
             public string cmd;
@@ -75,17 +56,9 @@ namespace ExpertSync
             }
         }
 
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        struct Message
-        {
-            public byte sid;          //!< software ID
-            public byte type;         //!< тип пакета
-            public byte receiver;     //!< номер программного приёмника
-            public double vfoa;                //!< частота приёмника A
-            public double vfob;                //!< частота приёмника B
-            public byte modulation;   //!< индекс модуляции eSyncModulation
-        }
-
+        private static int timeout = 10000;
+        private static Regex rEVT = new Regex(@"#EVT,IN,\d+,(\d+),(\d)"); 
+        
         // ManualResetEvent instances signal completion.
         private ManualResetEvent connectDone =
             new ManualResetEvent(false);
@@ -94,11 +67,21 @@ namespace ExpertSync
         private ManualResetEvent receiveDone =
             new ManualResetEvent(false);
 
-        private IPEndPoint remoteEP;
+        private string _host;
+        private int _port;
         private volatile Socket socket;
 
+        private volatile CmdEntry currentCmd = null;
+        private Object cmdQueeLock = new Object();
+        private List<CmdEntry> cmdQuee = new List<CmdEntry>();
+        private System.Threading.Timer replyTimer;
+
         public event EventHandler<DisconnectEventArgs> disconnected;
-        public event EventHandler<MessageEventArgs> onMessage;
+        public event EventHandler<LineReceivedEventArgs> lineReceived;
+        public event EventHandler<BytesReceivedEventArgs> bytesReceived;
+        
+        public string lineBreak = "\r\n";
+        public bool binaryMode;
 
         public bool connected
         {
@@ -108,25 +91,45 @@ namespace ExpertSync
             }
         }
 
-
-        public static ExpertSyncConnector create(string host, int port)
-        {
-            IPAddress hostIP;
-            if (IPAddress.TryParse(host, out hostIP))
+        
+       private void newCmd(string cmd, Action<string> cb)
+       {
+            CmdEntry ce = new CmdEntry( cmd, cb );
+            lock (cmdQueeLock)
             {
-                ExpertSyncConnector c = new ExpertSyncConnector();
-                c.remoteEP = new IPEndPoint(hostIP, port);
-                return c;
+                cmdQuee.Add(ce);
             }
-            else
+            if (currentCmd == null)
+                processQuee();
+        }
+
+        private void processQuee()
+        {
+            if (cmdQuee.Count > 0 && currentCmd == null)
             {
-                return null;
+                lock (cmdQueeLock)
+                {
+                    currentCmd = cmdQuee[0];
+                    cmdQuee.RemoveAt(0);
+                }
+                send(currentCmd.cmd + lineBreak);
             }
         }
 
-
         public bool connect()
         {
+            if (_host != null && !_host.Equals( string.Empty ) && _port != 0)
+                return connect(_host, _port);
+            else
+                return false;
+        }
+
+        public bool connect( string host, int port )
+        {
+            if (host == null || host.Equals(string.Empty) || port == 0 )
+                return false;
+            _host = host;
+            _port = port;
             // Connect to a remote device.
             try
             {
@@ -140,7 +143,7 @@ namespace ExpertSync
                         SocketType.Stream, ProtocolType.Tcp);
 
                     // Connect to the remote endpoint.
-                    IAsyncResult ar = socket.BeginConnect(remoteEP,
+                    IAsyncResult ar = socket.BeginConnect(host, port,
                         new AsyncCallback(connectCallback), null);
                     ar.AsyncWaitHandle.WaitOne(timeout, true);
 
@@ -171,14 +174,12 @@ namespace ExpertSync
         private void _disconnect(bool requested)
         {
             System.Diagnostics.Debug.WriteLine("disconnect");
+            receiveDone.Set();
             if (socket != null && socket.Connected)
                 socket.Close();
-            if (disconnected != null)
-            {
-                DisconnectEventArgs e = new DisconnectEventArgs();
-                e.requested = requested;
-                disconnected(this, e);
-            }
+            currentCmd = null;
+            cmdQuee.Clear();
+            disconnected?.Invoke(this, new DisconnectEventArgs { requested = requested });
         }
 
         private void connectCallback(IAsyncResult ar)
@@ -237,18 +238,27 @@ namespace ExpertSync
 
                     if (bytesRead > 0)
                     {
-                        // There might be more data, so store the data received so far.
-                        GCHandle pinnedBuffer = GCHandle.Alloc(state.buffer, GCHandleType.Pinned);
-                        Message msg = (Message)Marshal.PtrToStructure(pinnedBuffer.AddrOfPinnedObject(),
-                                typeof(Message));
-
-                        processReply(msg);
-
+                        if (binaryMode)
+                            processReply(state.buffer, bytesRead);
+                        else
+                        {
+                            // There might be more data, so store the data received so far.
+                            int co = 0;
+                            while (co < bytesRead)
+                            {
+                                string ch = Encoding.ASCII.GetString(state.buffer, co++, 1);
+                                state.sb.Append(ch);
+                                if (ch.Equals("\n"))
+                                {
+                                    //System.Diagnostics.Debug.WriteLine("received: " + state.sb.ToString());
+                                    processReply(state.sb.ToString());
+                                    state.sb.Clear();
+                                }
+                            }
+                        }
                         receiveDone.Set();
                         receive();
-                    }
-                    else
-                    {
+                    } else {
                         _disconnect(false);
                     }
                 }
@@ -259,32 +269,48 @@ namespace ExpertSync
             }
         }
 
-        private void processReply(Message msg)
+        private void processReply(string reply)
         {
-            if (onMessage != null)
+            //System.Diagnostics.Debug.WriteLine(reply);
+            if (replyTimer != null )
+                replyTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            if (currentCmd != null && currentCmd.cb != null)
             {
-                MessageEventArgs ea = new MessageEventArgs
-                {
-                    modulation = msg.modulation,
-                    vfoa = msg.vfoa,
-                    vfob = msg.vfob
-                };
-                onMessage(this, ea);
+                currentCmd.cb.Invoke(reply);
             }
+            lock (cmdQuee)
+            {
+                currentCmd = null;
+            }
+            lineReceived?.Invoke(this, new LineReceivedEventArgs { line = reply });
+            processQuee();
+        }
+
+        private void processReply( byte[] bytes, int count )
+        {
+            if (replyTimer != null)
+                replyTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            lock (cmdQuee)
+            {
+                currentCmd = null;
+            }
+            bytesReceived?.Invoke(this, new BytesReceivedEventArgs { bytes = bytes, count = count });
+            processQuee();
+
         }
 
 
         private void replyTimeout()
         {
-            System.Diagnostics.Debug.WriteLine("Reply timeout");
+            Debug.WriteLine( "Reply timeout" );
             _disconnect(false);
         }
 
-        private void send(String data)
+        private void send(string data)
         {
             if (socket != null && socket.Connected)
             {
-                System.Diagnostics.Debug.WriteLine("sending: " + data);
+                //Debug.WriteLine("sending: " + data);
                 // Convert the string data to byte data using ASCII encoding.
                 byte[] byteData = Encoding.ASCII.GetBytes(data);
 
@@ -295,6 +321,19 @@ namespace ExpertSync
         }
 
 
+        public string sendCommand( string cmd )
+        {
+            string result = "";
+            ManualResetEvent reDone = new ManualResetEvent(false);
+            newCmd(cmd, delegate (string r)
+            {
+                result = r;
+                reDone.Set();
+            });
+            reDone.WaitOne(timeout);
+            return result;
+        }
+
         private void sendCallback(IAsyncResult ar)
         {
             try
@@ -302,11 +341,12 @@ namespace ExpertSync
 
                 // Complete sending the data to the remote device.
                 int bytesSent = socket.EndSend(ar);
-                System.Diagnostics.Debug.WriteLine("Sent {0} bytes to server.", bytesSent);
+                //Debug.WriteLine("Sent {0} bytes to server.", bytesSent);
 
                 // Signal that all bytes have been sent.
                 sendDone.Set();
-
+                replyTimer = new System.Threading.Timer(obj => { replyTimeout(); }, null, timeout, Timeout.Infinite);
+                
             }
             catch (Exception e)
             {
@@ -316,6 +356,6 @@ namespace ExpertSync
 
     }
 
-
+    
 
 }

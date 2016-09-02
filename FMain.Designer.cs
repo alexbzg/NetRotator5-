@@ -40,7 +40,6 @@
             this.miSetNorth = new System.Windows.Forms.ToolStripMenuItem();
             this.miCalibrate = new System.Windows.Forms.ToolStripMenuItem();
             this.miModuleSettings = new System.Windows.Forms.ToolStripMenuItem();
-            this.bgWorker = new System.ComponentModel.BackgroundWorker();
             this.timer = new System.Windows.Forms.Timer(this.components);
             this.pMap = new System.Windows.Forms.PictureBox();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -54,7 +53,6 @@
             this.ddSettings = new System.Windows.Forms.ToolStripDropDownButton();
             this.miConnectionGroups = new System.Windows.Forms.ToolStripMenuItem();
             this.miConnectionGroupsList = new System.Windows.Forms.ToolStripMenuItem();
-            this.miRelays = new System.Windows.Forms.ToolStripMenuItem();
             this.miIngnoreEngineOffMovement = new System.Windows.Forms.ToolStripMenuItem();
             this.miExpertSync = new System.Windows.Forms.ToolStripMenuItem();
             this.miAbout = new System.Windows.Forms.ToolStripMenuItem();
@@ -125,7 +123,6 @@
             this.miCalibrate.Size = new System.Drawing.Size(221, 22);
             this.miCalibrate.Text = "Калибровать";
             this.miCalibrate.Visible = false;
-            this.miCalibrate.Click += new System.EventHandler(this.miCalibrate_Click);
             // 
             // miModuleSettings
             // 
@@ -133,14 +130,6 @@
             this.miModuleSettings.Size = new System.Drawing.Size(221, 22);
             this.miModuleSettings.Text = "Настройки модуля";
             this.miModuleSettings.Click += new System.EventHandler(this.miModuleSettings_Click);
-            // 
-            // bgWorker
-            // 
-            this.bgWorker.WorkerReportsProgress = true;
-            this.bgWorker.WorkerSupportsCancellation = true;
-            this.bgWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgWorker_DoWork);
-            this.bgWorker.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bgWorker_ProgressChanged);
-            this.bgWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgWorker_RunWorkerCompleted);
             // 
             // timer
             // 
@@ -255,7 +244,6 @@
             this.miMaps,
             this.miSetNorth,
             this.miCalibrate,
-            this.miRelays,
             this.miModuleSettings,
             this.miIngnoreEngineOffMovement,
             this.miExpertSync,
@@ -281,15 +269,6 @@
             this.miConnectionGroupsList.Size = new System.Drawing.Size(196, 22);
             this.miConnectionGroupsList.Text = "Редактировать список";
             this.miConnectionGroupsList.Click += new System.EventHandler(this.miConnectionGroupsList_Click);
-            // 
-            // miRelays
-            // 
-            this.miRelays.CheckOnClick = true;
-            this.miRelays.Name = "miRelays";
-            this.miRelays.Size = new System.Drawing.Size(221, 22);
-            this.miRelays.Text = "Управление реле";
-            this.miRelays.Visible = false;
-            this.miRelays.CheckStateChanged += new System.EventHandler(this.miRelays_CheckStateChanged);
             // 
             // miIngnoreEngineOffMovement
             // 
@@ -356,7 +335,6 @@
 
         private System.Windows.Forms.OpenFileDialog ofdMap;
         private System.Windows.Forms.ToolStripMenuItem miModuleSettings;
-        private System.ComponentModel.BackgroundWorker bgWorker;
         private System.Windows.Forms.Timer timer;
         private System.Windows.Forms.ToolStripMenuItem miConnections;
         private System.Windows.Forms.ToolStripMenuItem miEditConnections;
@@ -378,7 +356,6 @@
         private System.Windows.Forms.ToolStripLabel lAngle;
         private System.Windows.Forms.ToolStripLabel slCalibration;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-        private System.Windows.Forms.ToolStripMenuItem miRelays;
         private System.Windows.Forms.ToolStripMenuItem miAbout;
         private System.Windows.Forms.ToolStripMenuItem miIngnoreEngineOffMovement;
         private System.Windows.Forms.ToolStripMenuItem miConnectionGroups;

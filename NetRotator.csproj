@@ -90,6 +90,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncSocket.cs" />
     <Compile Include="ExpertSync.cs">
       <SubType>Form</SubType>
     </Compile>

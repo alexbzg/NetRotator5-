@@ -18,6 +18,7 @@ using System.Globalization;
 using ExpertSync;
 using System.Net;
 using Jerome;
+using AsyncConnectionNS;
 
 namespace EncRotator
 {
@@ -26,7 +27,9 @@ namespace EncRotator
     {
         static DeviceTemplate[] templates = {
                     new DeviceTemplate { engineLines = new Dictionary<int, int[]>{ { 1, new int[] { 16, 20 } }, {-1, new int[] { 15, 19} } },
-                                            ledLine = 23, uartRWLine = 123 } //0 NetRotator5
+                                            ledLine = 22, uartTRLine = 12,
+                                            limitsLines = new Dictionary<int, int> {  { 1, 14 }, { -1, 13 } }
+                                        } //0 NetRotator5
                     };
 
         internal bool editConnectionGroup(ConnectionSettings connectionSettings)
@@ -141,6 +144,13 @@ namespace EncRotator
                 formSPfromConnection(index);
 
             currentTemplate = getTemplate( currentConnection.deviceType );
+            if ( currentConnection.limitsSerialize != null )
+            {
+                currentConnection.limits = new Dictionary<int, int> { { 1, currentConnection.limitsSerialize[0] },
+                    { -1, currentConnection.limitsSerialize[1] }
+                };
+            }
+
             writeConfig();
 
             connect();
@@ -213,7 +223,7 @@ namespace EncRotator
             }
         }
 
-        private void onDisconnect(object obj, Jerome.DisconnectEventArgs e) {
+        private void onDisconnect(object obj, DisconnectEventArgs e) {
             currentConnection = null;
             if ( !closingFl )
                 this.Invoke((MethodInvoker)delegate
@@ -239,13 +249,20 @@ namespace EncRotator
                 System.Drawing.Rectangle bounds = this.WindowState != FormWindowState.Normal ? this.RestoreBounds : this.DesktopBounds;
                 currentConnection.formLocation = bounds.Location;
                 currentConnection.formSize = bounds.Size;
+                if ( currentConnection.limits != null )
+                {
+                    currentConnection.limitsSerialize = new int[] { -1, -1 };
+                    if (currentConnection.limits.ContainsKey(1))
+                        currentConnection.limitsSerialize[0] = currentConnection.limits[1];
+                    if (currentConnection.limits.ContainsKey(-1))
+                        currentConnection.limitsSerialize[1] = currentConnection.limits[-1];
+                }
             }
             using (StreamWriter sw = new StreamWriter( Application.StartupPath + "\\config.xml"))
             {
                 XmlSerializer ser = new XmlSerializer(typeof(FormState));
                 ser.Serialize(sw, formState);
             }
-
         }
 
 
@@ -277,6 +294,36 @@ namespace EncRotator
             }
         }
 
+        private void onLimit( int dir )
+        {
+            if (engineStatus == dir)
+                engine(0);
+            currentConnection.limits[dir] = currentAngle;
+            writeConfig();
+            this.Invoke((MethodInvoker)delegate
+            {
+                slCalibration.Text = "Концевик";
+                slCalibration.Visible = true;
+                string sDir = dir == 1 ? "по часовой стрелке" : "против часовой стрелки";
+                showMessage("Достигнут концевик. Дальнейшее движение антенны " + sDir + " невозможно", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            });
+        }
+
+
+        private void lineStateChanged( object sender, LineStateChangedEventArgs e )
+        {
+            if ( currentTemplate.limitsLines.Values.Contains( e.line ) && e.state == 0 )
+            {
+                int dir = currentTemplate.limitsLines.SingleOrDefault(x => x.Value == e.line).Key;
+                onLimit(dir);
+            }
+        }
+
+        private void usartBytesReceived( object sender, BytesReceivedEventArgs e )
+        {
+
+        }
+
         private void connect()
         {
             miConnections.Enabled = false;
@@ -285,6 +332,9 @@ namespace EncRotator
             UseWaitCursor = true;
             if ( controller.connect() ) {                           
                 miConnections.Text = "Отключиться";
+                controller.lineStateChanged += lineStateChanged;
+                controller.usartBytesReceived += usartBytesReceived;
+                controller.disconnected += onDisconnect;
                 connectionsDropdown = new ToolStripMenuItem[miConnections.DropDownItems.Count];
                 miConnections.DropDownItems.CopyTo(connectionsDropdown,0);
                 miConnections.DropDownItems.Clear();
@@ -299,6 +349,9 @@ namespace EncRotator
                         setLine( line, 0 );
                         toggleLine( line, 0 );
                     }
+                setLine(currentTemplate.uartTRLine, 0);
+                foreach (int line in currentTemplate.limitsLines.Values)
+                    setLine(line, 1);
 
                 timer.Enabled = true;
 
@@ -337,41 +390,26 @@ namespace EncRotator
                 System.Diagnostics.Debug.WriteLine("start " + currentAngle.ToString() + " - " + angle.ToString());
                 if (targetAngle != currentAngle)
                 {
-                    if (limitDirection != 0)
-                        engine(-limitDirection);
-                    else
+                    int d = aD(targetAngle, currentAngle);
+                    int dir = Math.Sign(d);
+                    int nLimit = getNearestLimit(dir);
+                    if (nLimit != -1)
                     {
-                        int d = aD(targetAngle, currentAngle);
-                        int dir = Math.Sign(d);
-                        if (currentTemplate.adc == null && limits != null)
-                        {
-                            int nStop = getNearestStop(dir);
-                            if (nStop != -1)
-                            {
-                                int dS = aD(nStop, currentAngle);
-                                if (Math.Sign(dS) == dir && Math.Abs(dS) < Math.Abs(d))
-                                    dir = -dir;
-                            }
-                        }
-                        else if (currentTemplate.adc != null)
-                        {
-                            startAngle = currentAngle;
-                            int rt = currentAngle + d;
-                            if (rt < 0 || rt > 450)
-                                dir = -dir;
-                        }
-                        engine(dir);
+                        int dS = aD(nLimit, currentAngle);
+                        if (Math.Sign(dS) == dir && Math.Abs(dS) < Math.Abs(d))
+                            dir = -dir;
                     }
+                    engine(dir);
                 }
             }
         }
 
-        private int getNearestStop(int dir)
+        private int getNearestLimit(int dir)
         {
-            int nStop = dir;
-            if (limits[nStop] == -1)
-                nStop = -nStop;
-            return limits[nStop];
+            int nLimit = dir;
+            if (currentConnection.limits[nLimit] == -1)
+                nLimit = -nLimit;
+            return currentConnection.limits[nLimit];
         }
 
 
@@ -392,20 +430,6 @@ namespace EncRotator
                         engineStatus = -engineStatus;
                     }
                 }*/
-                if (engineStatus != 0)
-                {
-                    if (currentConnection.deviceType == 0)
-                    {
-                        int nStop = getNearestStop(engineStatus);
-                        if (nStop != -1)
-                        {
-                            int dS = aD(nStop, currentAngle);
-                            if (Math.Sign(dS) == engineStatus && Math.Abs(dS) < 7)
-                                engine(0);
-                        }
-
-                    }
-                }
                 currentAngle = newAngle;
                 angleChanged = true;
                 if (currentConnection.northAngle != -1 && engineStatus != 0 && targetAngle != -1)
@@ -706,12 +730,12 @@ namespace EncRotator
 
         private void fMain_Load(object sender, EventArgs e)
         {
-            if (connectionFromArgs == -1)
+            if (connectionFromArgs == -1 )
             {
-                if (formState.currentConnection != -1)
+                if (formState.currentConnection != -1 && formState.connections.Count > formState.currentConnection)
                     formSPfromConnection(formState.currentConnection);
             } 
-            else
+            else if (formState.connections.Count > connectionFromArgs)
                 loadConnection(connectionFromArgs);
             loaded = true;
             AutoUpdater.CurrentCulture = CultureInfo.CreateSpecificCulture("ru-RU");
@@ -774,7 +798,7 @@ namespace EncRotator
 
         }
 
-        private void esDisconnected(object sender, ExpertSync.DisconnectEventArgs e)
+        private void esDisconnected(object sender, DisconnectEventArgs e)
         {
             if (!e.requested)
                 MessageBox.Show("Соединение с ExpertSync потеряно!");
@@ -801,7 +825,8 @@ namespace EncRotator
     class DeviceTemplate
     {
         internal Dictionary<int, int[]> engineLines;
-        internal int uartRWLine;
+        internal Dictionary<int, int> limitsLines;
+        internal int uartTRLine;
         internal int ledLine;
     }
 
@@ -809,20 +834,24 @@ namespace EncRotator
     {
 
         public string name = "";
-        public JeromeConnectionParams jeromeParams;
+        public JeromeConnectionParams jeromeParams = new JeromeConnectionParams();
         public int northAngle = -1;
         public int[] switchIntervals = new int[] { 5, 5 };
+        [XmlIgnoreAttribute]
+        public Dictionary<int, int> limits = new Dictionary<int, int> { { 1, -1 }, { -1, 1 } };
         public int deviceType = 0;
         public int icon = 0;
         public System.Drawing.Point formLocation;
         public System.Drawing.Size formSize;
         internal bool ignoreEngineOffMovement;
+        internal int[] limitsSerialize;
 
         public override string ToString()
         {
             return name;
         }
     }
+
 
     public class ConnectionGroupEntry
     {

@@ -50,8 +50,8 @@ namespace EncRotator
        
         private void bDeleteStops_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Вы действительно хотите сбросить настройки концевиков?", "Подтверждение", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                ((fMain)this.Owner).clearStops();
+            if (MessageBox.Show("Вы действительно хотите сбросить настройки концевиков?", "Подтверждение", MessageBoxButtons.YesNo) == DialogResult.Yes) ;
+//                ((fMain)this.Owner).clearStops();
         }
     }
 }
