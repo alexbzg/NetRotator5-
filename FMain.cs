@@ -198,12 +198,12 @@ namespace EncRotator
                 if (val == 0 || engineStatus != 0)
                 {
                     toggleLine(currentTemplate.engineLines[engineStatus][1], 0);
-                    Thread.Sleep(currentConnection.switchIntervals[1]);
+                    Thread.Sleep(currentConnection.switchIntervals[1]*1000);
                     toggleLine(currentTemplate.engineLines[engineStatus][0], 0);
                 }
                 if ( val != 0 ) {
                     toggleLine(currentTemplate.engineLines[val][1], 1);
-                    Thread.Sleep(currentConnection.switchIntervals[0]);
+                    Thread.Sleep(currentConnection.switchIntervals[0] * 1000);
                     toggleLine(currentTemplate.engineLines[val][0], 1);
                 }
                 engineStatus = val;
