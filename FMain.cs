@@ -45,6 +45,7 @@ namespace EncRotator
         int engineStatus = 0;
         int mapAngle = -1;
         int startAngle = -1;
+        int encGrayVal = -1;
         bool angleChanged = false;
         bool mvtBlink = false;
         List<Bitmap> maps = new List<Bitmap>();
@@ -321,7 +322,23 @@ namespace EncRotator
 
         private void usartBytesReceived( object sender, BytesReceivedEventArgs e )
         {
-
+            int lo = -1;
+            int hi = -1;
+            for (int co = 0; co < e.count; co++)
+                if (e.bytes[co] >= 128)
+                    hi = (e.bytes[co] - 128) << 5;
+                else
+                    lo = e.bytes[co] - 64;
+            if ( lo != -1 && hi != -1 && encGrayVal != lo + hi )
+            {
+                encGrayVal = lo + hi;
+                int val = encGrayVal;
+	            for (int mask = val >> 1; mask != 0; mask = mask >> 1)
+	            {
+		            val = val ^ mask;
+	            }
+                setCurrentAngle(val);
+            }
         }
 
         private void connect()
@@ -332,6 +349,7 @@ namespace EncRotator
             UseWaitCursor = true;
             if ( controller.connect() ) {                           
                 miConnections.Text = "Отключиться";
+                controller.usartBinaryMode = true;
                 controller.lineStateChanged += lineStateChanged;
                 controller.usartBytesReceived += usartBytesReceived;
                 controller.disconnected += onDisconnect;
