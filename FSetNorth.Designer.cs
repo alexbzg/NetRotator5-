@@ -38,6 +38,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.bDeleteStops = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -71,7 +72,7 @@
             // 
             this.bOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.bOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.bOK.Location = new System.Drawing.Point(244, 319);
+            this.bOK.Location = new System.Drawing.Point(129, 314);
             this.bOK.Name = "bOK";
             this.bOK.Size = new System.Drawing.Size(82, 32);
             this.bOK.TabIndex = 2;
@@ -143,7 +144,7 @@
             // bDeleteStops
             // 
             this.bDeleteStops.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.bDeleteStops.Location = new System.Drawing.Point(24, 268);
+            this.bDeleteStops.Location = new System.Drawing.Point(24, 265);
             this.bDeleteStops.Name = "bDeleteStops";
             this.bDeleteStops.Size = new System.Drawing.Size(282, 30);
             this.bDeleteStops.TabIndex = 0;
@@ -151,11 +152,23 @@
             this.bDeleteStops.UseVisualStyleBackColor = true;
             this.bDeleteStops.Click += new System.EventHandler(this.bDeleteStops_Click);
             // 
+            // button1
+            // 
+            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.button1.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.button1.Location = new System.Drawing.Point(217, 314);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(104, 32);
+            this.button1.TabIndex = 9;
+            this.button1.Text = "Oтменить";
+            this.button1.UseVisualStyleBackColor = true;
+            // 
             // FSetNorth
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(329, 354);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.bDeleteStops);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -184,5 +197,6 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Button bDeleteStops;
+        private System.Windows.Forms.Button button1;
     }
 }

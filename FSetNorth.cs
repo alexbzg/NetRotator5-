@@ -11,11 +11,21 @@ namespace EncRotator
 {
     public partial class FSetNorth : Form
     {
-        public Dictionary<int,int> stopAngles = new Dictionary<int,int> { {-1, -1 }, {1,-1}};
+        public Dictionary<int,int> limits = new Dictionary<int,int> { {-1, -1 }, {1,-1}};
         public int northAngle = -1;
-        public FSetNorth()
+        private ConnectionSettings _cs;
+        public FSetNorth( ConnectionSettings cs )
         {
             InitializeComponent();
+            northAngle = cs.northAngle;
+            if ( cs.hwLimits )
+            {
+                bStop0.Enabled = false;
+                bStop1.Enabled = false;
+                bDeleteStops.Enabled = false;
+            } else 
+                limits = new Dictionary<int,int>( cs.limits );
+            _cs = cs;
         }
 
         private void bRotate0_MouseDown(object sender, MouseEventArgs e)
@@ -35,7 +45,7 @@ namespace EncRotator
 
         private void bStop0_Click(object sender, EventArgs e)
         {
-            stopAngles[1] = ((fMain)this.Owner).getCurrentAngle();
+            limits[1] = ((fMain)this.Owner).getCurrentAngle();
         }
 
         private void bNorth_Click(object sender, EventArgs e)
@@ -45,13 +55,16 @@ namespace EncRotator
 
         private void bStop1_Click(object sender, EventArgs e)
         {
-            stopAngles[-1] = ((fMain)this.Owner).getCurrentAngle();
+            limits[-1] = ((fMain)this.Owner).getCurrentAngle();
         }
        
         private void bDeleteStops_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Вы действительно хотите сбросить настройки концевиков?", "Подтверждение", MessageBoxButtons.YesNo) == DialogResult.Yes) ;
-//                ((fMain)this.Owner).clearStops();
+            if (MessageBox.Show("Вы действительно хотите сбросить настройки концевиков?", "Подтверждение", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                ((fMain)this.Owner).clearLimits();
+                limits = new Dictionary<int, int>(_cs.limits);
+            }
         }
     }
 }

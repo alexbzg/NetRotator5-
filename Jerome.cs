@@ -147,14 +147,8 @@ namespace Jerome
             if (match.Success)
             {
                 int line = Convert.ToInt16( match.Groups[1].Value );
-                int lineState = match.Groups[2].Value == "0" ? 1 : 0;
-                if ( lineStateChanged != null)
-                {
-                    LineStateChangedEventArgs ee = new LineStateChangedEventArgs();
-                    ee.line = line;
-                    ee.state = lineState;
-                    lineStateChanged(this, ee);
-                }
+                int lineState = match.Groups[2].Value == "0" ? 0 : 1;
+                lineStateChanged?.Invoke(this, new LineStateChangedEventArgs { line = line, state = lineState });
             }
             else if ( !reply.StartsWith( "#SLINF" ) && !reply.Contains( "FLAGS" ) && !reply.Contains( "JConfig" ) )
             {

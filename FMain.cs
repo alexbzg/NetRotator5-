@@ -45,11 +45,19 @@ namespace EncRotator
         int engineStatus = 0;
         int mapAngle = -1;
         int startAngle = -1;
+        volatile int limitReached = 0;
         int encGrayVal = -1;
         bool angleChanged = false;
         bool mvtBlink = false;
         List<Bitmap> maps = new List<Bitmap>();
         ToolStripMenuItem[] connectionsDropdown;
+
+        internal void clearLimits()
+        {
+            currentConnection.limits = new Dictionary<int, int> { { 1, -1 }, { -1, -1 } };
+            writeConfig();
+        }
+
         int prevHeight;
         double mapRatio = 0;
         ConnectionSettings currentConnection;
@@ -191,7 +199,7 @@ namespace EncRotator
 
         public void engine(int val)
         {
-            if ( val != engineStatus ) {
+            if ( val != engineStatus && ( limitReached == 0 || limitReached != val )) {
                 this.UseWaitCursor = true;
                 /*Cursor tmpCursor = Cursor.Current;
                 Cursor.Current = Cursors.WaitCursor;*/
@@ -205,6 +213,8 @@ namespace EncRotator
                     toggleLine(currentTemplate.engineLines[val][1], 1);
                     Thread.Sleep(currentConnection.switchIntervals[0] * 1000);
                     toggleLine(currentTemplate.engineLines[val][0], 1);
+                    if (limitReached != 0 && !currentConnection.hwLimits)
+                        offLimit();
                 }
                 engineStatus = val;
                 System.Diagnostics.Debug.WriteLine("engine " + val.ToString());
@@ -295,28 +305,51 @@ namespace EncRotator
             }
         }
 
+        private void offLimit()
+        {
+            this.Invoke((MethodInvoker)delegate {
+                if (slCalibration.Visible && slCalibration.Text == "Концевик")
+                    slCalibration.Visible = false;
+            });
+            limitReached = 0;
+        }
+
         private void onLimit( int dir )
         {
+            if (limitReached == dir)
+                return;
             if (engineStatus == dir)
                 engine(0);
-            currentConnection.limits[dir] = currentAngle;
+            if ( currentConnection.hwLimits )
+                currentConnection.limits[dir] = currentAngle;
             writeConfig();
             this.Invoke((MethodInvoker)delegate
             {
-                slCalibration.Text = "Концевик";
-                slCalibration.Visible = true;
-                string sDir = dir == 1 ? "по часовой стрелке" : "против часовой стрелки";
-                showMessage("Достигнут концевик. Дальнейшее движение антенны " + sDir + " невозможно", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (!slCalibration.Visible || slCalibration.Text != "Концевик")
+                {
+                    slCalibration.Text = "Концевик";
+                    slCalibration.Visible = true;
+                    string sDir = dir == 1 ? "по часовой стрелке" : "против часовой стрелки";
+                    showMessage("Достигнут концевик. Дальнейшее движение антенны " + sDir + " невозможно", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             });
         }
 
 
         private void lineStateChanged( object sender, LineStateChangedEventArgs e )
         {
-            if ( currentTemplate.limitsLines.Values.Contains( e.line ) && e.state == 0 )
+            if ( currentTemplate.limitsLines.Values.Contains( e.line ) )
             {
-                int dir = currentTemplate.limitsLines.SingleOrDefault(x => x.Value == e.line).Key;
-                onLimit(dir);
+                if (e.state == 0)
+                {
+                    int dir = currentTemplate.limitsLines.SingleOrDefault(x => x.Value == e.line).Key;
+                    onLimit(dir);
+                }
+                else if (slCalibration.Text == "Концевик")
+                    this.Invoke((MethodInvoker)delegate
+                   {
+                       slCalibration.Visible = false;
+                   });
             }
         }
 
@@ -350,7 +383,8 @@ namespace EncRotator
             if ( controller.connect() ) {                           
                 miConnections.Text = "Отключиться";
                 controller.usartBinaryMode = true;
-                controller.lineStateChanged += lineStateChanged;
+                if ( currentConnection.hwLimits )
+                    controller.lineStateChanged += lineStateChanged;
                 controller.usartBytesReceived += usartBytesReceived;
                 controller.disconnected += onDisconnect;
                 connectionsDropdown = new ToolStripMenuItem[miConnections.DropDownItems.Count];
@@ -380,6 +414,13 @@ namespace EncRotator
                 if (currentConnectionGroup != null)
                     Text += " (" + currentConnectionGroup.name + ")";
                 Icon = (Icon) Resources.ResourceManager.GetObject(CommonInf.icons[currentConnection.icon]);
+                if ( currentConnection.hwLimits )
+                {
+                    string lines = controller.readlines();
+                    foreach (KeyValuePair<int, int> kv in currentTemplate.limitsLines)
+                        if (lines[kv.Value - 1] == '0')
+                            onLimit(kv.Key);
+                }
             }
             else
             {
@@ -410,10 +451,10 @@ namespace EncRotator
                 {
                     int d = aD(targetAngle, currentAngle);
                     int dir = Math.Sign(d);
-                    int nLimit = getNearestLimit(dir);
-                    if (nLimit != -1)
+                    int limit = currentConnection.limits[dir];
+                    if (limit != -1)
                     {
-                        int dS = aD(nLimit, currentAngle);
+                        int dS = aD(limit, currentAngle);
                         if (Math.Sign(dS) == dir && Math.Abs(dS) < Math.Abs(d))
                             dir = -dir;
                     }
@@ -436,24 +477,10 @@ namespace EncRotator
             int newAngle = (int)(((double)num) * 0.3515625);
             if (newAngle != currentAngle)
             {
-               /* if (currentAngle != -1 && engineStatus != 0)
-                {
-                    if (Math.Sign(aD(newAngle, currentAngle)) != engineStatus)
-                    {
-                        System.Diagnostics.Debug.WriteLine("engine lines swap: " + engineStatus.ToString() + " - " + currentAngle.ToString() +
-                            " -> " + newAngle.ToString());
-                        string t = engineLines[-1];
-                        engineLines[-1] = engineLines[1];
-                        engineLines[1] = t;
-                        engineStatus = -engineStatus;
-                    }
-                }*/
                 currentAngle = newAngle;
                 angleChanged = true;
                 if (currentConnection.northAngle != -1 && engineStatus != 0 && targetAngle != -1)
                 {
-                    /*mapAngle = currentAngle - northAngle + (currentAngle < northAngle ? 360 : 0);
-                    pMap.Refresh();*/
                     int tD = aD(targetAngle, currentAngle);
 
 
@@ -465,13 +492,21 @@ namespace EncRotator
                         pMap.Invalidate();
                     }
                 }
+                if (engineStatus != 0 && !currentConnection.hwLimits)
+                {
+                    int limit = currentConnection.limits[engineStatus];
+                    if (limit != -1)
+                    {
+                        int ld = aD(limit, currentAngle);
+                        if (Math.Sign(ld) == engineStatus && Math.Abs(ld) < 3)
+                            onLimit(engineStatus);
+                    }
+                }
                 int displayAngle = currentAngle;
                 if (currentConnection.northAngle != -1)
                     displayAngle += ( displayAngle < currentConnection.northAngle ? 360 : 0 ) - currentConnection.northAngle;
 
                 showAngleLabel(displayAngle, -1);
-              /*  if (targetAngle != -1)
-                    System.Diagnostics.Debug.WriteLine("target: " + targetAngle.ToString() + " current: " + currentAngle.ToString());*/
             }
         }
 
@@ -575,11 +610,12 @@ namespace EncRotator
 
         private void miSetNorth_Click(object sender, EventArgs e)
         {
-            FSetNorth fSNorth = new FSetNorth();
+            FSetNorth fSNorth = new FSetNorth(currentConnection);
             if (fSNorth.ShowDialog(this) == DialogResult.OK)
             {
-                if (fSNorth.northAngle != -1)
-                    currentConnection.northAngle = fSNorth.northAngle;
+                currentConnection.northAngle = fSNorth.northAngle;
+                if ( !currentConnection.hwLimits )
+                    currentConnection.limits = fSNorth.limits;
                 writeConfig();
                 pMap.Invalidate();
             }
@@ -670,11 +706,14 @@ namespace EncRotator
             bool result = fParams.DialogResult == DialogResult.OK;
             if (result)
             {
-                conn.jeromeParams.host = fParams.data.host;
-                conn.jeromeParams.port = Convert.ToInt16( fParams.data.port );
-                conn.name = fParams.data.name;
-                conn.jeromeParams.usartPort = Convert.ToInt16( fParams.data.usartPort );
-                conn.icon = fParams.data.icon;
+                conn.jeromeParams.host = fParams.tbHost.Text.Trim();
+                conn.jeromeParams.port = Convert.ToInt16( fParams.tbPort.Text.Trim() );
+                conn.name = fParams.tbName.Text.Trim();
+                conn.jeromeParams.usartPort = Convert.ToInt16( fParams.tbUSARTPort.Text.Trim() );
+                conn.icon = fParams.icon;
+                conn.hwLimits = fParams.chbHwLimits.Checked;
+                conn.switchIntervals[0] = Convert.ToInt32( fParams.nudIntervalOn.Value );
+                conn.switchIntervals[1] = Convert.ToInt32(fParams.nudIntervalOff.Value);
                 writeConfig();
                 if ( conn.Equals( currentConnection ) )
                 {
@@ -848,7 +887,7 @@ namespace EncRotator
         internal int ledLine;
     }
 
-    public class ConnectionSettings
+    public class ConnectionSettings 
     {
 
         public string name = "";
@@ -862,12 +901,14 @@ namespace EncRotator
         public System.Drawing.Point formLocation;
         public System.Drawing.Size formSize;
         internal bool ignoreEngineOffMovement;
-        internal int[] limitsSerialize;
+        public bool hwLimits;
+        public int[] limitsSerialize;
 
         public override string ToString()
         {
             return name;
         }
+
     }
 
 
