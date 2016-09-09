@@ -697,10 +697,10 @@ wdt_enable( WDTO_2S );
 sei();
  4a8:	78 94       	sei
  4aa:	01 c0       	rjmp	.+2      	; 0x4ae <__stack+0x4f>
-		{
-			val = val ^ mask;
-		}
-		encVal = val;*/
+	if ( encGrayVal != encGrayValCache )
+	{
+		encGrayVal = encGrayValCache;
+		*leds[1].port |= leds[1].mask;
 	}
 }
  4ac:	00 00       	nop
@@ -787,8 +787,6 @@ for(;;)
  53c:	09 f4       	brne	.+2      	; 0x540 <__stack+0xe1>
  53e:	b6 cf       	rjmp	.-148    	; 0x4ac <__stack+0x4d>
 	{
-		/*unsigned int mask;
-		unsigned int val = encGrayValCache;*/
 		encGrayVal = encGrayValCache;
  540:	8a 81       	ldd	r24, Y+2	; 0x02
  542:	9b 81       	ldd	r25, Y+3	; 0x03
@@ -805,10 +803,6 @@ for(;;)
  564:	23 2b       	or	r18, r19
  566:	fc 01       	movw	r30, r24
  568:	20 83       	st	Z, r18
-		{
-			val = val ^ mask;
-		}
-		encVal = val;*/
 	}
 }
  56a:	a1 cf       	rjmp	.-190    	; 0x4ae <__stack+0x4f>

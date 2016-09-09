@@ -44,21 +44,9 @@ namespace AsyncConnectionNS
 
     public class AsyncConnection
     {
-        class CmdEntry
-        {
-            public string cmd;
-            public Action<string> cb;
-
-            public CmdEntry(string cmdE, Action<string> cbE)
-            {
-                cmd = cmdE;
-                cb = cbE;
-            }
-        }
 
         private static int timeout = 10000;
-        private static Regex rEVT = new Regex(@"#EVT,IN,\d+,(\d+),(\d)"); 
-        
+
         // ManualResetEvent instances signal completion.
         private ManualResetEvent connectDone =
             new ManualResetEvent(false);
@@ -71,10 +59,6 @@ namespace AsyncConnectionNS
         private int _port;
         private volatile Socket socket;
 
-        private volatile CmdEntry currentCmd = null;
-        private Object cmdQueeLock = new Object();
-        private List<CmdEntry> cmdQuee = new List<CmdEntry>();
-        private System.Threading.Timer replyTimer;
 
         public event EventHandler<DisconnectEventArgs> disconnected;
         public event EventHandler<LineReceivedEventArgs> lineReceived;
@@ -92,29 +76,6 @@ namespace AsyncConnectionNS
         }
 
         
-       private void newCmd(string cmd, Action<string> cb)
-       {
-            CmdEntry ce = new CmdEntry( cmd, cb );
-            lock (cmdQueeLock)
-            {
-                cmdQuee.Add(ce);
-            }
-            if (currentCmd == null)
-                processQuee();
-        }
-
-        private void processQuee()
-        {
-            if (cmdQuee.Count > 0 && currentCmd == null)
-            {
-                lock (cmdQueeLock)
-                {
-                    currentCmd = cmdQuee[0];
-                    cmdQuee.RemoveAt(0);
-                }
-                send(currentCmd.cmd + lineBreak);
-            }
-        }
 
         public bool connect()
         {
@@ -177,8 +138,6 @@ namespace AsyncConnectionNS
             receiveDone.Set();
             if (socket != null && socket.Connected)
                 socket.Close();
-            currentCmd = null;
-            cmdQuee.Clear();
             disconnected?.Invoke(this, new DisconnectEventArgs { requested = requested });
         }
 
@@ -272,39 +231,15 @@ namespace AsyncConnectionNS
         private void processReply(string reply)
         {
             //System.Diagnostics.Debug.WriteLine(reply);
-            if (replyTimer != null )
-                replyTimer.Change(Timeout.Infinite, Timeout.Infinite);
-            if (currentCmd != null && currentCmd.cb != null)
-            {
-                currentCmd.cb.Invoke(reply);
-            }
-            lock (cmdQuee)
-            {
-                currentCmd = null;
-            }
             lineReceived?.Invoke(this, new LineReceivedEventArgs { line = reply });
-            processQuee();
         }
 
         private void processReply( byte[] bytes, int count )
         {
-            if (replyTimer != null)
-                replyTimer.Change(Timeout.Infinite, Timeout.Infinite);
-            lock (cmdQuee)
-            {
-                currentCmd = null;
-            }
             bytesReceived?.Invoke(this, new BytesReceivedEventArgs { bytes = bytes, count = count });
-            processQuee();
-
         }
 
 
-        private void replyTimeout()
-        {
-            Debug.WriteLine( "Reply timeout" );
-            _disconnect(false);
-        }
 
         private void send(string data)
         {
@@ -321,17 +256,9 @@ namespace AsyncConnectionNS
         }
 
 
-        public string sendCommand( string cmd )
+        public void sendCommand( string cmd )
         {
-            string result = "";
-            ManualResetEvent reDone = new ManualResetEvent(false);
-            newCmd(cmd, delegate (string r)
-            {
-                result = r;
-                reDone.Set();
-            });
-            reDone.WaitOne(timeout);
-            return result;
+            send(cmd + lineBreak);
         }
 
         private void sendCallback(IAsyncResult ar)
@@ -345,7 +272,6 @@ namespace AsyncConnectionNS
 
                 // Signal that all bytes have been sent.
                 sendDone.Set();
-                replyTimer = new System.Threading.Timer(obj => { replyTimeout(); }, null, timeout, Timeout.Infinite);
                 
             }
             catch (Exception e)

@@ -51,6 +51,10 @@ namespace EncRotator
         bool mvtBlink = false;
         List<Bitmap> maps = new List<Bitmap>();
         ToolStripMenuItem[] connectionsDropdown;
+        System.Threading.Timer timeoutTimer;
+        volatile Task engineTask;
+        CancellationTokenSource engineTaskCTS = new CancellationTokenSource();
+        volatile bool engineTaskActive;
 
         internal void clearLimits()
         {
@@ -98,6 +102,22 @@ namespace EncRotator
                     setCurrentMap(0);
                 prevHeight = Height;
             }
+        }
+
+        private void scheduleTimeoutTimer()
+        {
+            timeoutTimer = new System.Threading.Timer(
+                obj =>
+                {
+                    this.Invoke((MethodInvoker)delegate
+                   {
+                        if ( currentConnection != null )
+                            showMessage("Потеряна связь с устройством!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        if (controller != null && controller.connected)
+                            disconnect();
+                   });
+                },
+                null, 1000, Timeout.Infinite);
         }
 
         private void setCurrentMap(int val)
@@ -200,35 +220,115 @@ namespace EncRotator
         public void engine(int val)
         {
             if ( val != engineStatus && ( limitReached == 0 || limitReached != val )) {
+                //System.Diagnostics.Debug.WriteLine("Engine switch begins");
                 this.UseWaitCursor = true;
                 /*Cursor tmpCursor = Cursor.Current;
                 Cursor.Current = Cursors.WaitCursor;*/
                 if (val == 0 || engineStatus != 0)
                 {
-                    toggleLine(currentTemplate.engineLines[engineStatus][1], 0);
-                    Thread.Sleep(currentConnection.switchIntervals[1]*1000);
-                    toggleLine(currentTemplate.engineLines[engineStatus][0], 0);
+                    int prevDir = engineStatus;
+                    toggleLine(currentTemplate.engineLines[prevDir][1], 0);
+                    System.Diagnostics.Debug.WriteLine("Scheduling Delayed switch off");
+                    this.Invoke((MethodInvoker)delegate
+                  {
+                      if ( slCalibration.Text != "Концевик" || !slCalibration.Visible )
+                      {
+                          slCalibration.Text = "Остановка";
+                          slCalibration.Visible = true;
+                      }
+    
+                  });
+                    if (engineTaskActive)
+                    {
+                        engineTaskCTS.Cancel();
+                        try
+                        {
+                            engineTask.Wait();
+                        }
+                        catch (AggregateException) { }
+                    }
+                    engineTaskActive = true;
+                    pMap.Enabled = false;
+                    engineTask = TaskEx.Run(
+                        async () =>
+                        {
+                            await TaskEx.Delay( currentConnection.switchIntervals[1] * 1000 );
+                            System.Diagnostics.Debug.WriteLine("Delayed switch off");
+                            toggleLine(currentTemplate.engineLines[prevDir][0], 0);
+                            clearEngineTask();
+                        });
                 }
-                if ( val != 0 ) {
-                    toggleLine(currentTemplate.engineLines[val][1], 1);
-                    Thread.Sleep(currentConnection.switchIntervals[0] * 1000);
+                if ( val != 0 && !engineTaskActive) {
                     toggleLine(currentTemplate.engineLines[val][0], 1);
+                    pMap.Enabled = false;
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        if (slCalibration.Text != "Концевик" || !slCalibration.Visible)
+                        {
+                            slCalibration.Text = "Пуск";
+                            slCalibration.Visible = true;
+                        }
+
+                    });
+                    engineTaskActive = true;
+                    CancellationToken ct = engineTaskCTS.Token;
+                    System.Diagnostics.Debug.WriteLine("Scheduling Delayed switch on");
+                    engineTask = TaskEx.Run(
+                        async () =>
+                        {
+                            await TaskEx.Delay(currentConnection.switchIntervals[0] * 1000, ct);
+                            if (!ct.IsCancellationRequested)
+                            {
+                                System.Diagnostics.Debug.WriteLine("Delayed switch on");
+                                toggleLine(currentTemplate.engineLines[val][1], 1);
+                            }
+                            clearEngineTask();
+                        }, ct);
                     if (limitReached != 0 && !currentConnection.hwLimits)
                         offLimit();
                 }
                 engineStatus = val;
                 System.Diagnostics.Debug.WriteLine("engine " + val.ToString());
-                this.UseWaitCursor = false;
                 //Cursor.Current = tmpCursor;
             }
         }
 
-        private void disconnect()
+        private void clearEngineTask()
         {
+            engineTaskActive = false;
+            engineTaskCTS.Dispose();
+            engineTaskCTS = new CancellationTokenSource();
+            this.Invoke((MethodInvoker)delegate
+              {
+                  if (slCalibration.Text != "Концевик")
+                      slCalibration.Visible = false;
+                  pMap.Enabled = true;
+                  this.UseWaitCursor = false;
+              });
+
+        }
+
+        private async void disconnect()
+        {
+            if (timeoutTimer != null)
+            {
+                timeoutTimer.Dispose();
+                timeoutTimer = null;
+            }
             if (controller != null && controller.connected)
             {
                 if (engineStatus != 0)
+                {
                     engine(0);
+                }
+                else
+                    clearEngineTask();
+                if (engineTask != null)
+                {
+                    await engineTask;
+                    engineTask.Dispose();
+                    engineTask = null;
+                }
                 toggleLine(currentTemplate.ledLine, 0);
                 controller.disconnect();
             }
@@ -249,7 +349,9 @@ namespace EncRotator
                     miConnectionGroups.Visible = true;
                     miIngnoreEngineOffMovement.Visible = false;
                     timer.Enabled = false;
+                    targetAngle = -1;
                     pMap.Invalidate();
+                    offLimit();
                 });
         }
 
@@ -355,6 +457,9 @@ namespace EncRotator
 
         private void usartBytesReceived( object sender, BytesReceivedEventArgs e )
         {
+            if (timeoutTimer != null)
+                timeoutTimer.Change(1000, Timeout.Infinite);
+            //System.Diagnostics.Debug.WriteLine("---");
             int lo = -1;
             int hi = -1;
             for (int co = 0; co < e.count; co++)
@@ -370,7 +475,7 @@ namespace EncRotator
 	            {
 		            val = val ^ mask;
 	            }
-                setCurrentAngle(val);
+                this.Invoke((MethodInvoker)delegate { setCurrentAngle(val); });
             }
         }
 
@@ -421,6 +526,7 @@ namespace EncRotator
                         if (lines[kv.Value - 1] == '0')
                             onLimit(kv.Key);
                 }
+                scheduleTimeoutTimer();
             }
             else
             {
@@ -474,6 +580,8 @@ namespace EncRotator
 
         private void setCurrentAngle(int num)
         {
+            if (currentConnection == null)
+                return;
             int newAngle = (int)(((double)num) * 0.3515625);
             if (newAngle != currentAngle)
             {
@@ -485,7 +593,7 @@ namespace EncRotator
 
 
 
-                    if (Math.Sign(tD) == engineStatus && Math.Abs(tD) < 3 )
+                    if (Math.Abs(tD) < 3 )
                     {
                         engine(0);
                         targetAngle = -1;
@@ -604,7 +712,7 @@ namespace EncRotator
                     else
                         setCurrentMap(0);
             }
-            else if ( currentConnection != null && currentConnection.northAngle != -1 && currentAngle != -1)            
+            else if ( currentConnection != null && currentConnection.northAngle != -1 && currentAngle != -1 && !engineTaskActive)            
                 rotateToAngle(mouse2Angle( e.X, e.Y ));            
         }
 
@@ -796,7 +904,7 @@ namespace EncRotator
                 loadConnection(connectionFromArgs);
             loaded = true;
             AutoUpdater.CurrentCulture = CultureInfo.CreateSpecificCulture("ru-RU");
-            AutoUpdater.Start("http://73.ru/apps/AntennaNetRotator/update.xml");
+            AutoUpdater.Start("http://73.ru/apps/AntennaNetRotator5/update.xml");
         }
 
         private void fMain_ResizeEnd(object sender, EventArgs e)

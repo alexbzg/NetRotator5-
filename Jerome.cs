@@ -10,6 +10,7 @@ using System.IO;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using AsyncConnectionNS;
+using System.Threading.Tasks;
 
 namespace Jerome
 {
@@ -22,6 +23,7 @@ namespace Jerome
 
     public class JeromeController
     {
+
         class CmdEntry
         {
             public string cmd;
@@ -34,9 +36,16 @@ namespace Jerome
             }
         }
 
+        private volatile CmdEntry currentCmd = null;
+        private Object cmdQueeLock = new Object();
+        private List<CmdEntry> cmdQuee = new List<CmdEntry>();
+
+
+
         private static int timeout = 10000;
-        private static Regex rEVT = new Regex(@"#EVT,IN,\d+,(\d+),(\d)"); 
-        
+        private static Regex rEVT = new Regex(@"#EVT,IN,\d+,(\d+),(\d)");
+        private System.Threading.Timer replyTimer;
+
         // ManualResetEvent instances signal completion.
 
         private IPEndPoint remoteEP;
@@ -101,6 +110,45 @@ namespace Jerome
             }
         }
 
+        private void newCmd(string cmd, Action<string> cb)
+        {
+            CmdEntry ce = new CmdEntry(cmd, cb);
+            lock (cmdQueeLock)
+            {
+                cmdQuee.Add(ce);
+            }
+            if (currentCmd == null)
+                processQuee();
+        }
+
+        private void processQuee()
+        {
+            if (cmdQuee.Count > 0 && currentCmd == null)
+            {
+                lock (cmdQueeLock)
+                {
+                    currentCmd = cmdQuee[0];
+                    cmdQuee.RemoveAt(0);
+                }
+                connection.sendCommand("$KE," + currentCmd.cmd);
+                replyTimer = new Timer( obj => replyTimeout(), null, timeout, Timeout.Infinite);
+            }
+        }
+
+        public string sendCommand(string cmd)
+        {
+            string result = "";
+            ManualResetEvent reDone = new ManualResetEvent(false);
+            newCmd(cmd, delegate (string r)
+            {
+                result = r;
+                reDone.Set();
+            });
+            reDone.WaitOne(timeout);
+            return result;
+        }
+
+
 
         public bool connect()
         {
@@ -128,6 +176,8 @@ namespace Jerome
 
         public void disconnect()
         {
+            currentCmd = null;
+            cmdQuee.Clear();
             _disconnect(true);
         }
 
@@ -136,6 +186,8 @@ namespace Jerome
             System.Diagnostics.Debug.WriteLine("disconnect");
             if (connected)
                 connection.disconnect();
+            if (usartConnected)
+                usartConnection.disconnect();
         }
 
 
@@ -148,11 +200,24 @@ namespace Jerome
             {
                 int line = Convert.ToInt16( match.Groups[1].Value );
                 int lineState = match.Groups[2].Value == "0" ? 0 : 1;
-                lineStateChanged?.Invoke(this, new LineStateChangedEventArgs { line = line, state = lineState });
+                Task.Factory.StartNew( () =>
+                    lineStateChanged?.Invoke(this, new LineStateChangedEventArgs { line = line, state = lineState } ) );
             }
             else if ( !reply.StartsWith( "#SLINF" ) && !reply.Contains( "FLAGS" ) && !reply.Contains( "JConfig" ) )
             {
-            }            
+                replyTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                if (currentCmd != null && currentCmd.cb != null)
+                {
+                    Action<string> cb = currentCmd.cb;
+                    Task.Factory.StartNew( () => cb.Invoke(reply) );
+                }
+                lock (cmdQuee)
+                {
+                    currentCmd = null;
+                }
+                processQuee();
+
+            }
         }
 
         public void setLineMode(int line, int mode)
@@ -167,15 +232,19 @@ namespace Jerome
 
         public string readlines()
         {
-            return sendCommand("RID,ALL");
+            string reply = sendCommand("RID,ALL");
+            int split = reply.LastIndexOf( ',' );
+            return reply.Substring(split + 1).TrimEnd('\r', '\n');
         }
 
 
-        public string sendCommand( string cmd )
+
+        private void replyTimeout()
         {
-            System.Diagnostics.Debug.WriteLine(cmd);
-            return connection.sendCommand("$KE," + cmd);
+            System.Diagnostics.Debug.WriteLine("Reply timeout");
+            _disconnect(false);
         }
+
 
 
     }
