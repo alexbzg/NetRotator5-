@@ -58,6 +58,7 @@
             this.miAbout = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.slCalibration = new System.Windows.Forms.ToolStripLabel();
+            this.lCaption = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pMap)).BeginInit();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -142,9 +143,9 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pMap.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.pMap.Location = new System.Drawing.Point(0, 29);
+            this.pMap.Location = new System.Drawing.Point(0, 58);
             this.pMap.Name = "pMap";
-            this.pMap.Size = new System.Drawing.Size(526, 421);
+            this.pMap.Size = new System.Drawing.Size(526, 392);
             this.pMap.TabIndex = 16;
             this.pMap.TabStop = false;
             this.pMap.Paint += new System.Windows.Forms.PaintEventHandler(this.pMap_Paint);
@@ -308,11 +309,27 @@
             this.slCalibration.Text = "Калибровка";
             this.slCalibration.Visible = false;
             // 
+            // lCaption
+            // 
+            this.lCaption.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lCaption.AutoSize = true;
+            this.lCaption.BackColor = System.Drawing.SystemColors.Control;
+            this.lCaption.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.lCaption.ForeColor = System.Drawing.Color.Red;
+            this.lCaption.Location = new System.Drawing.Point(3, 26);
+            this.lCaption.Name = "lCaption";
+            this.lCaption.Size = new System.Drawing.Size(218, 31);
+            this.lCaption.TabIndex = 18;
+            this.lCaption.Text = "Нет соединения";
+            // 
             // fMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(526, 453);
+            this.Controls.Add(this.lCaption);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.pMap);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -361,6 +378,7 @@
         private System.Windows.Forms.ToolStripMenuItem miConnectionGroups;
         private System.Windows.Forms.ToolStripMenuItem miConnectionGroupsList;
         private System.Windows.Forms.ToolStripMenuItem miExpertSync;
+        private System.Windows.Forms.Label lCaption;
     }
 }
 

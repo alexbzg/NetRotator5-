@@ -90,11 +90,13 @@ namespace EncRotator
                     connectionFromArgs = formState.connections.FindIndex(item => item.name.Equals(args[0]));
                 }
                 string currentMapStr = "";
-                if ( formState.currentMap != -1 )
+                if ( formState.currentMap != -1 && formState.currentMap < formState.maps.Count )
                     currentMapStr = formState.maps[ formState.currentMap ];
                 formState.maps.RemoveAll( item => !File.Exists(item) );
                 if (!currentMapStr.Equals(string.Empty))
-                    formState.currentMap = formState.maps.IndexOf( currentMapStr );
+                    formState.currentMap = formState.maps.IndexOf(currentMapStr);
+                else
+                    formState.currentMap = -1;
                 formState.maps.ForEach( item => loadMap( item ) );
                 if (formState.currentMap != -1)
                     setCurrentMap(formState.currentMap);
@@ -340,6 +342,7 @@ namespace EncRotator
                 this.Invoke((MethodInvoker)delegate
                 {                
                     Text = "Нет соединения";
+                    lCaption.Text = "Нет соединения";
                     Icon = (Icon)Resources.ResourceManager.GetObject(CommonInf.icons[0]);
                     miConnections.Text = "Соединения";
                     if (connectionsDropdown != null)
@@ -516,6 +519,7 @@ namespace EncRotator
                 miSetNorth.Enabled = true;
 
                 Text = currentConnection.name;
+                lCaption.Text = currentConnection.name;
                 if (currentConnectionGroup != null)
                     Text += " (" + currentConnectionGroup.name + ")";
                 Icon = (Icon) Resources.ResourceManager.GetObject(CommonInf.icons[currentConnection.icon]);
