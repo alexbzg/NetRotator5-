@@ -10,7 +10,7 @@ Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj
 		{E3B7AA31-F4BB-434C-8079-1B65D08AF0D7} = {E3B7AA31-F4BB-434C-8079-1B65D08AF0D7}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RotatorLauncher", "..\launcher\RotatorLauncher\RotatorLauncher.csproj", "{D297D8F8-4E45-4028-86B6-66115FD3D866}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RotatorLauncher", "RotatorLauncher\RotatorLauncher.csproj", "{E55F70AE-C046-426A-BACB-2A1ED69BCD5B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,14 +34,14 @@ Global
 		{3CE987FC-F97D-4EDA-A98C-328C2DCD8B41}.Release|Any CPU.Build.0 = Release
 		{3CE987FC-F97D-4EDA-A98C-328C2DCD8B41}.Release|x86.ActiveCfg = Release
 		{3CE987FC-F97D-4EDA-A98C-328C2DCD8B41}.Release|x86.Build.0 = Release
-		{D297D8F8-4E45-4028-86B6-66115FD3D866}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D297D8F8-4E45-4028-86B6-66115FD3D866}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D297D8F8-4E45-4028-86B6-66115FD3D866}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{D297D8F8-4E45-4028-86B6-66115FD3D866}.Debug|x86.Build.0 = Debug|Any CPU
-		{D297D8F8-4E45-4028-86B6-66115FD3D866}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D297D8F8-4E45-4028-86B6-66115FD3D866}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D297D8F8-4E45-4028-86B6-66115FD3D866}.Release|x86.ActiveCfg = Release|Any CPU
-		{D297D8F8-4E45-4028-86B6-66115FD3D866}.Release|x86.Build.0 = Release|Any CPU
+		{E55F70AE-C046-426A-BACB-2A1ED69BCD5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E55F70AE-C046-426A-BACB-2A1ED69BCD5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E55F70AE-C046-426A-BACB-2A1ED69BCD5B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E55F70AE-C046-426A-BACB-2A1ED69BCD5B}.Debug|x86.Build.0 = Debug|Any CPU
+		{E55F70AE-C046-426A-BACB-2A1ED69BCD5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E55F70AE-C046-426A-BACB-2A1ED69BCD5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E55F70AE-C046-426A-BACB-2A1ED69BCD5B}.Release|x86.ActiveCfg = Release|Any CPU
+		{E55F70AE-C046-426A-BACB-2A1ED69BCD5B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
