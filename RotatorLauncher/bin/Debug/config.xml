@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AppConf xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <rotatorPaths>
+    <string>C:\works\rotator\EncRotator2\bin\Debug</string>
+    <string>C:\works\rotator\NetRotator5+\bin\Debug</string>
+  </rotatorPaths>
+</AppConf>

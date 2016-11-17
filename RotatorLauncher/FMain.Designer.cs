@@ -33,7 +33,7 @@
             this.ddbSettings = new System.Windows.Forms.ToolStripDropDownButton();
             this.miPathOld = new System.Windows.Forms.ToolStripMenuItem();
             this.miPath5 = new System.Windows.Forms.ToolStripMenuItem();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.ofdRotator = new System.Windows.Forms.OpenFileDialog();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -64,16 +64,20 @@
             this.miPathOld.Name = "miPathOld";
             this.miPathOld.Size = new System.Drawing.Size(152, 22);
             this.miPathOld.Text = "NetRotator";
+            this.miPathOld.Click += new System.EventHandler(this.miPathClick);
             // 
             // miPath5
             // 
             this.miPath5.Name = "miPath5";
             this.miPath5.Size = new System.Drawing.Size(152, 22);
             this.miPath5.Text = "NetRotator5+";
+            this.miPath5.Click += new System.EventHandler(this.miPathClick);
             // 
-            // openFileDialog1
+            // ofdRotator
             // 
-            this.openFileDialog1.FileName = "openFileDialog1";
+            this.ofdRotator.FileName = "openFileDialog1";
+            this.ofdRotator.Filter = "AntennaNetRotator.exe|AntennaNetRotator.exe";
+            this.ofdRotator.FileOk += new System.ComponentModel.CancelEventHandler(this.ofdRotator_FileOk);
             // 
             // FMain
             // 
@@ -96,7 +100,7 @@
         private System.Windows.Forms.ToolStripDropDownButton ddbSettings;
         private System.Windows.Forms.ToolStripMenuItem miPathOld;
         private System.Windows.Forms.ToolStripMenuItem miPath5;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.OpenFileDialog ofdRotator;
     }
 }
 

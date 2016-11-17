@@ -124,18 +124,18 @@
   <data name="ddbSettings.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHiSURBVDhPlZM9SFtRFMefHxWUiHQRBV3sLE15SxqKb4l5
-        yXvvPiIlk8G6FR07BBJCvhxERHB1dHJVnP1Al4qTs+hW6mShrdiCmP7O80aezzj0wOHde8/9nfM/5yZG
-        1FzXnVVKLTmOE9dH/2f5fD5GgiP8nmTLpmm+siyrl1CXxGu1Wl+9Xv/Et1v2HQ0g5nneV6W8FkoKHIXh
-        HbyFb1KsR86fmGROJpODVN+WBCg51OdhOPByuWxLz3OZTGYsAr8GvgaWBAed4EqlsirtGUhdROZ5Op0e
-        F5j1iOc5nwUmdlooFIajcKlUWiM2EMxGAC7feJ57mc1m96l8qyu3RBnVt6NwKpUaSiQS/YgOZmMo5cyT
-        6E73HDj7v1IF6DgKi9JHWEx68X1nCmgLPwPc933fbTQaH1FwJSoY2Ipt26MCy6w0+mDhd24b8AxVvzOs
-        d66bfstgffwbBeRZn1lHmEpxoBKKaOuhPWmVs1l99bmFYZHLYKeBfrVn82ISgDnA3TDcHhhAEv+pE5yg
-        6At7GfIHjRsG4AXeqlarG2G4PTAuv5ckfNf5CQ+x/sG6EsDNZtPk4h0J9orFok1g4Mk7a5MkKPgNzJOr
-        P7RhBgHgCXxYXiP674taLpd7o5S7wGwmLcvq/QcrZBpBZMRC3QAAAABJRU5ErkJggg==
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHhSURBVDhPlZM9SFtRFMdf1QqVFOkiFupS52LkLWkQ35Lm
+        Je+9+0iRTAZ1Kzp2CCSEfDmUIoKro5NrpHOt6KI4OUu7lTop+IEKYvo7zxt5PuPggcO97577O+d/zk2M
+        qLmuO62UWnQcJ66Pnmf5fD5Ggm38lmTfTNN8aVlWH6EXEq/Vav31en2WtUe+uxpAzPO8XaW8NkoKHIXh
+        DbyNr1GsV84fmGROJpOvqd6SBCjZ0udhOPByuWxLzzOZTOZdBH4DfAwsCX51gyuVypK0ZyB1AZmH6XR6
+        RGD2w57nfBGY2H6hUBiKwqVSaZnYQDAbAbh8kc1m/6Bkk8qXunJblFG9FYVTqdRgIpF4hehgNoZSzpxt
+        2ze658D5vpYqQDtRWJTew2LSi+87k6hYR9EB4Kbv+26j0ZhCwZGoYGDfSfpWYJmVRu8s/M4dA/5M1X8M
+        a9x102MM1qfAX/2sj6wrTKU4YAlFtHXXnrTK2bS++tjCsMil6ieqnnVm82QSgBnAH2G4MzASJIFOdYI9
+        FH3VQ57QuGEA/sbb1Wp1NQx3Bsblj5KEdYWf8CD7E/aVAG42myYXb0jws1gs2gQGHryzNkmCgnNpgfWK
+        NswgAPweH5LXiP77opbL5UaVcueZzQfLsvr+A6eFGdyhYwneAAAAAElFTkSuQmCC
 </value>
   </data>
-  <metadata name="openFileDialog1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="ofdRotator.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>122, 17</value>
   </metadata>
 </root>

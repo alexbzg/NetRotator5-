@@ -10,3 +10,9 @@ C:\works\rotator\launcher\RotatorLauncher\obj\Debug\RotatorLauncher.pdb
 C:\works\rotator\NetRotator5+\RotatorLauncher\bin\Debug\RotatorLauncher.exe.config
 C:\works\rotator\NetRotator5+\RotatorLauncher\obj\Debug\RotatorLauncher.exe
 C:\works\rotator\NetRotator5+\RotatorLauncher\obj\Debug\RotatorLauncher.pdb
+C:\works\rotator\NetRotator5+\RotatorLauncher\bin\Debug\RotatorLauncher.exe
+C:\works\rotator\NetRotator5+\RotatorLauncher\bin\Debug\RotatorLauncher.pdb
+C:\works\rotator\NetRotator5+\RotatorLauncher\obj\Debug\RotatorLauncher.csprojResolveAssemblyReference.cache
+C:\works\rotator\NetRotator5+\RotatorLauncher\obj\Debug\RotatorLauncher.FMain.resources
+C:\works\rotator\NetRotator5+\RotatorLauncher\obj\Debug\RotatorLauncher.Properties.Resources.resources
+C:\works\rotator\NetRotator5+\RotatorLauncher\obj\Debug\RotatorLauncher.csproj.GenerateResource.Cache
