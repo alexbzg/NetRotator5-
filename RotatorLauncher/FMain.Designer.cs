@@ -46,11 +46,13 @@
             // 
             // toolStrip1
             // 
+            this.toolStrip1.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.ddbSettings});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(355, 25);
+            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
+            this.toolStrip1.Size = new System.Drawing.Size(346, 25);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -69,14 +71,14 @@
             // miPathOld
             // 
             this.miPathOld.Name = "miPathOld";
-            this.miPathOld.Size = new System.Drawing.Size(146, 22);
-            this.miPathOld.Text = "NetRotator";
+            this.miPathOld.Size = new System.Drawing.Size(240, 30);
+            this.miPathOld.Text = "NetRotator (Yaesu)";
             this.miPathOld.Click += new System.EventHandler(this.miPathClick);
             // 
             // miPath5
             // 
             this.miPath5.Name = "miPath5";
-            this.miPath5.Size = new System.Drawing.Size(146, 22);
+            this.miPath5.Size = new System.Drawing.Size(240, 30);
             this.miPath5.Text = "NetRotator5+";
             this.miPath5.Click += new System.EventHandler(this.miPathClick);
             // 
@@ -88,6 +90,10 @@
             // 
             // dgvDevices
             // 
+            this.dgvDevices.AccessibleRole = System.Windows.Forms.AccessibleRole.MenuBar;
+            this.dgvDevices.AllowUserToAddRows = false;
+            this.dgvDevices.AllowUserToDeleteRows = false;
+            this.dgvDevices.AllowUserToResizeRows = false;
             this.dgvDevices.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -96,12 +102,13 @@
             this.Band,
             this.Run,
             this.Run2});
-            this.dgvDevices.ContextMenuStrip = this.cmDevices;
-            this.dgvDevices.Location = new System.Drawing.Point(0, 0);
+            this.dgvDevices.Location = new System.Drawing.Point(0, 31);
+            this.dgvDevices.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.dgvDevices.Name = "dgvDevices";
-            this.dgvDevices.Size = new System.Drawing.Size(355, 312);
+            this.dgvDevices.Size = new System.Drawing.Size(346, 189);
             this.dgvDevices.TabIndex = 1;
             this.dgvDevices.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvDevices_CellClick);
+            this.dgvDevices.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.dgvDevices_CellContextMenuStripNeeded);
             // 
             // Band
             // 
@@ -127,18 +134,21 @@
             // 
             // cmDevices
             // 
+            this.cmDevices.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.cmDevices.Name = "cmDevices";
-            this.cmDevices.Size = new System.Drawing.Size(153, 26);
+            this.cmDevices.Size = new System.Drawing.Size(61, 4);
             // 
             // FMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(355, 314);
+            this.ClientSize = new System.Drawing.Size(346, 224);
             this.Controls.Add(this.dgvDevices);
             this.Controls.Add(this.toolStrip1);
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.Name = "FMain";
-            this.Text = "Form1";
+            this.Text = "RotatorLauncher";
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvDevices)).EndInit();

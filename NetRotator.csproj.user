@@ -11,8 +11,7 @@
     <VerifyUploadedFiles>false</VerifyUploadedFiles>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <StartArguments>
-    </StartArguments>
+    <StartArguments>0</StartArguments>
     <StartWorkingDirectory>C:\works\rotator\EncRotator2\bin\Debug\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">

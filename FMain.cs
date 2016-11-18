@@ -19,6 +19,7 @@ using ExpertSync;
 using System.Net;
 using Jerome;
 using AsyncConnectionNS;
+using System.Diagnostics;
 
 namespace EncRotator
 {
@@ -85,9 +86,15 @@ namespace EncRotator
                 loadConfig();
                 updateConnectionsMenu();
                 updateConnectionGroupsMenu();
+                Trace.Listeners.Add(new TextWriterTraceListener(Application.StartupPath + "\\rotator.log"));
+                Trace.AutoFlush = true;
+                Trace.Indent();
+                Trace.WriteLine("Initialization");
+
                 if (args.Count() > 0)
                 {
-                    connectionFromArgs = formState.connections.FindIndex(item => item.name.Equals(args[0]));
+                    Trace.WriteLine("Command line argument " + args[0]);
+                    connectionFromArgs = Convert.ToInt16(args[0]);
                 }
                 string currentMapStr = "";
                 if ( formState.currentMap != -1 && formState.currentMap < formState.maps.Count )

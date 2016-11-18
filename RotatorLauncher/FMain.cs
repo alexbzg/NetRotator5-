@@ -12,14 +12,13 @@ namespace RotatorLauncher
     {
         static readonly string[] exeNames = { "AntennaNetRotator.exe", "AntennaNetRotator5.exe" };
         static readonly string[] bands = { "10", "15", "20", "40", "80", "160" };
+        const int bandsCount = 6;
 
-        private class DeviceEntry
+        public class DeviceEntry
         {
-            int programType;
-            string name;
-            int index;
-
-
+            public int programType;
+            public string name;
+            public int index;
         };
 
         private class DeviceRow
@@ -49,25 +48,56 @@ namespace RotatorLauncher
 
         };
 
+        public class AppConf
+        {
+            public string[] rotatorPaths = new string[] { "", "" };
+            public DeviceEntry[][] devices;
+
+            public void initDevices() {
+                devices = new DeviceEntry[bandsCount][];
+                for ( int co = 0; co < bandsCount; co++ )
+                    devices[co] = new DeviceEntry[2];
+            }
+        }
+
         FormState[] rotatorStates = new FormState[] { null, null };
         AppConf appConf = new AppConf();
         int ofdIndex = -1;
         BindingList<DeviceRow> blDevices = new BindingList<DeviceRow>();
         BindingSource bsDevices;
+        int menuBand = -1;
+        int menuDevType = -1;
 
         public FMain()
         {
             InitializeComponent();
             readConfig();
+            if (appConf.devices.Length < bandsCount)
+                appConf.initDevices();
 
             for (int co = 0; co < 2; co++)
             {
                 setRotatorPath(co, appConf.rotatorPaths[co]);
                 if ( rotatorStates[co] != null )
                 {
+                    int programType = co;
                     ToolStripMenuItem mi = new ToolStripMenuItem();
                     mi.Text = ddbSettings.DropDownItems[co].Text;
+                    for (int subCo = 0; subCo < rotatorStates[co].connections.Count; subCo++ )
+                    {
+                        ConnectionSettings cs = rotatorStates[co].connections[subCo];
+                        ToolStripMenuItem miSub = new ToolStripMenuItem();
+                        int index = subCo;
+                        miSub.Text = cs.name;
+                        miSub.Click += delegate (object sender, EventArgs e)
+                        {
+                            setDevEntry(menuBand, menuDevType, new DeviceEntry { programType = programType, name = cs.name, index = index } );
+                            writeConfig();
+                        };
+                        mi.DropDownItems.Add(miSub);
+                    }
                     cmDevices.Items.Add(mi);
+
                 }
             }
 
@@ -75,10 +105,37 @@ namespace RotatorLauncher
             dgvDevices.AutoGenerateColumns = false;
             dgvDevices.DataSource = bsDevices;
 
-            foreach ( string band in bands)
+            for ( int co = 0; co < bandsCount; co++ )
             {
-                blDevices.Add(new DeviceRow { band = band });
+                string[] devNames = new string[] { null, null };
+                for ( int subCo = 0; subCo < 2; subCo++ )
+                {
+                    if (appConf.devices[co][subCo] != null) {
+                        DeviceEntry de = appConf.devices[co][subCo];
+                        if (rotatorStates[de.programType] != null)
+                        {
+                            int newIdx = rotatorStates[de.programType].connections.FindIndex(
+                                cs => cs.name == de.name
+                            );
+                            de.index = newIdx;
+                            if (newIdx != -1)
+                                devNames[subCo] = de.name;
+                        }
+                    }
+                }
+                blDevices.Add(new DeviceRow { band = bands[co], run = devNames[0], run2 = devNames[1] });
             }
+        }
+
+        private void setDevEntry( int band, int devType, DeviceEntry de )
+        {
+            appConf.devices[band][devType] = de;
+            DeviceRow dr = blDevices[band];
+            if (devType == 0)
+                dr.run = de.name;
+            else
+                dr.run2 = de.name;
+            blDevices.ResetItem(band);
         }
 
         private FormState loadRotatorConfig(string path)
@@ -97,7 +154,7 @@ namespace RotatorLauncher
             }
             return null;
         }
-
+        
         private void miPathClick(object sender, EventArgs e)
         {
             ToolStripMenuItem miSender = (ToolStripMenuItem)sender;
@@ -153,7 +210,24 @@ namespace RotatorLauncher
 
         private void dgvDevices_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            Debug.WriteLine("cell click");
+            if ( e.ColumnIndex > 0 && e.RowIndex > -1 )
+            {
+                DeviceEntry de = appConf.devices[e.RowIndex][e.ColumnIndex - 1];
+                if (de != null && de.index != -1)
+                    Process.Start( appConf.rotatorPaths[de.programType] + "//" + exeNames[de.programType], de.index.ToString() );
+            }
+        }
+
+        private void dgvDevices_CellContextMenuStripNeeded(object sender, DataGridViewCellContextMenuStripNeededEventArgs e)
+        {
+            if (e.ColumnIndex < 1 || e.RowIndex < 0)
+                e.ContextMenuStrip = null;
+            else
+            {
+                menuBand = e.RowIndex;
+                menuDevType = e.ColumnIndex - 1;
+                e.ContextMenuStrip = cmDevices;
+            }
         }
     }
 
@@ -168,8 +242,5 @@ namespace RotatorLauncher
         public List<ConnectionSettings> connections;
     }
 
-    public class AppConf
-    {
-        public string[] rotatorPaths = new string[] { "", "" };
-    }
+    
 }
