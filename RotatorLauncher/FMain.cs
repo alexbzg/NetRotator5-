@@ -72,7 +72,7 @@ namespace RotatorLauncher
         {
             InitializeComponent();
             readConfig();
-            if (appConf.devices.Length < bandsCount)
+            if (appConf.devices == null || appConf.devices.Length < bandsCount)
                 appConf.initDevices();
 
             for (int co = 0; co < 2; co++)
