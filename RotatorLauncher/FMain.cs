@@ -76,30 +76,7 @@ namespace RotatorLauncher
                 appConf.initDevices();
 
             for (int co = 0; co < 2; co++)
-            {
                 setRotatorPath(co, appConf.rotatorPaths[co]);
-                if ( rotatorStates[co] != null )
-                {
-                    int programType = co;
-                    ToolStripMenuItem mi = new ToolStripMenuItem();
-                    mi.Text = ddbSettings.DropDownItems[co].Text;
-                    for (int subCo = 0; subCo < rotatorStates[co].connections.Count; subCo++ )
-                    {
-                        ConnectionSettings cs = rotatorStates[co].connections[subCo];
-                        ToolStripMenuItem miSub = new ToolStripMenuItem();
-                        int index = subCo;
-                        miSub.Text = cs.name;
-                        miSub.Click += delegate (object sender, EventArgs e)
-                        {
-                            setDevEntry(menuBand, menuDevType, new DeviceEntry { programType = programType, name = cs.name, index = index } );
-                            writeConfig();
-                        };
-                        mi.DropDownItems.Add(miSub);
-                    }
-                    cmDevices.Items.Add(mi);
-
-                }
-            }
 
             bsDevices = new BindingSource(blDevices, null);
             dgvDevices.AutoGenerateColumns = false;
@@ -174,8 +151,42 @@ namespace RotatorLauncher
             string exePath = path + "\\" + exeNames[index];
             if (File.Exists(exePath))
             {
+                ToolStripMenuItem mi;
                 ddbSettings.DropDownItems[index].ToolTipText = exePath;
+                int miIdx = -1;
+                for (int co = 0; co < cmDevices.Items.Count; co++)
+                    if (cmDevices.Items[co].Text == ddbSettings.DropDownItems[index].Text)
+                    {
+                        miIdx = co;
+                        break;
+                    }
+                if (miIdx == -1)
+                {
+                    mi = new ToolStripMenuItem();
+                    mi.Text = ddbSettings.DropDownItems[index].Text;
+                    cmDevices.Items.Add(mi);
+                }
+                else
+                {
+                    mi = (ToolStripMenuItem)cmDevices.Items[miIdx];
+                    mi.DropDownItems.Clear();
+                }
                 rotatorStates[index] = loadRotatorConfig(path);
+                if (rotatorStates[index] != null)
+                    for (int subCo = 0; subCo < rotatorStates[index].connections.Count; subCo++)
+                    {
+                        ConnectionSettings cs = rotatorStates[index].connections[subCo];
+                        ToolStripMenuItem miSub = new ToolStripMenuItem();
+                        int csIdx = subCo;
+                        miSub.Text = cs.name;
+                        miSub.Click += delegate (object sender, EventArgs e)
+                        {
+                            setDevEntry(menuBand, menuDevType, new DeviceEntry { programType = index, name = cs.name, index = csIdx });
+                            writeConfig();
+                        };
+                        mi.DropDownItems.Add(miSub);
+                    }
+
                 if ( appConf.rotatorPaths[index] != path )
                 {
                     appConf.rotatorPaths[index] = path;
