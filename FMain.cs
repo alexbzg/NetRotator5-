@@ -530,13 +530,15 @@ namespace EncRotator
                 if (currentConnectionGroup != null)
                     Text += " (" + currentConnectionGroup.name + ")";
                 Icon = (Icon) Resources.ResourceManager.GetObject(CommonInf.icons[currentConnection.icon]);
-                if ( currentConnection.hwLimits )
+                if (currentConnection.hwLimits)
                 {
                     string lines = controller.readlines();
                     foreach (KeyValuePair<int, int> kv in currentTemplate.limitsLines)
                         if (lines[kv.Value - 1] == '0')
                             onLimit(kv.Key);
                 }
+                else if (currentConnection.northAngle != -1)
+                    currentConnection.limits = new Dictionary<int, int> { { 1, currentConnection.northAngle + 180 }, { -1, currentConnection.northAngle + 180 } };
                 scheduleTimeoutTimer();
             }
             else
@@ -735,7 +737,7 @@ namespace EncRotator
             {
                 currentConnection.northAngle = fSNorth.northAngle;
                 if ( !currentConnection.hwLimits )
-                    currentConnection.limits = fSNorth.limits;
+                    currentConnection.limits = new Dictionary<int, int> { { 1, currentConnection.northAngle + 180 }, { -1, currentConnection.northAngle + 180 } };
                 writeConfig();
                 pMap.Invalidate();
             }
@@ -1015,7 +1017,7 @@ namespace EncRotator
         public int northAngle = -1;
         public int[] switchIntervals = new int[] { 5, 5 };
         [XmlIgnoreAttribute]
-        public Dictionary<int, int> limits = new Dictionary<int, int> { { 1, -1 }, { -1, 1 } };
+        public Dictionary<int, int> limits = new Dictionary<int, int> { { 1, -1 }, { -1, -1 } };
         public int deviceType = 0;
         public int icon = 0;
         public System.Drawing.Point formLocation;

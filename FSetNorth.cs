@@ -26,6 +26,8 @@ namespace EncRotator
             } else 
                 limits = new Dictionary<int,int>( cs.limits );
             _cs = cs;
+            if (!cs.hwLimits)
+                bDeleteStops.Visible = false;
         }
 
         private void bRotate0_MouseDown(object sender, MouseEventArgs e)

@@ -90,6 +90,7 @@
             this.bStop0.Text = "Концевик";
             this.bStop0.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
             this.bStop0.UseVisualStyleBackColor = true;
+            this.bStop0.Visible = false;
             this.bStop0.Click += new System.EventHandler(this.bStop0_Click);
             // 
             // bStop1
@@ -103,6 +104,7 @@
             this.bStop1.Text = "Концевик";
             this.bStop1.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage;
             this.bStop1.UseVisualStyleBackColor = true;
+            this.bStop1.Visible = false;
             this.bStop1.Click += new System.EventHandler(this.bStop1_Click);
             // 
             // bNorth
